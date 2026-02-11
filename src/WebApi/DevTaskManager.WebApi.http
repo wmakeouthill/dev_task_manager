@@ -1,0 +1,6 @@
+@DevTaskManager.WebApi_HostAddress = http://localhost:5011
+
+GET {{DevTaskManager.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

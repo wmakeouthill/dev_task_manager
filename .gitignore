@@ -1,0 +1,142 @@
+# =============================
+# .NET / C# / Visual Studio
+# =============================
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+*.ncb
+*.aps
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.VC.opendb
+project.lock.json
+project.fragment.lock.json
+artifacts/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Tt]est[Rr]esult*/
+*.VisualState.xml
+*.rsuser
+*.userprefs
+
+# NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+.nuget/
+nuget.exe
+
+# .NET Core
+project.assets.json
+project.fragment.lock.json
+artifacts/
+
+# Rider
+.idea/
+*.sln.iml
+
+# =============================
+# Node / Frontend
+# =============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-store/
+dist/
+dist-ssr/
+*.local
+.env
+.env.local
+.env.*.local
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+.vite/
+*.tsbuildinfo
+
+# =============================
+# IDE / Editores
+# =============================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sw?
+*~
+
+# =============================
+# Sistema operacional
+# =============================
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# =============================
+# Logs e temporários
+# =============================
+logs/
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# =============================
+# Testes e cobertura
+# =============================
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+coverage/
+*.lcov
+.nyc_output/
+.coverage
+htmlcov/
+.pytest_cache/
+TestResults/
+
+# =============================
+# Segredos e ambiente
+# =============================
+# Manter .env.example versionado; ignorar .env com dados reais
+# (frontend já pode ter .env.example)
+*.pfx
+secrets.json
+appsettings.*.local.json
+
+# =============================
+# Markdown (exceto README)
+# =============================
+*.md
+!README.md
