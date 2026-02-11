@@ -8,6 +8,7 @@ export interface Card {
   status: 'Todo' | 'InProgress' | 'Done'
   ordem: number
   dueDate: string | null
+  aiEnabled: boolean
   createdAt: string
 }
 
@@ -22,6 +23,7 @@ export interface UpdateCardRequest {
   titulo?: string | null
   descricao?: string | null
   dueDate?: string | null
+  aiEnabled?: boolean
 }
 
 export interface MoveCardRequest {

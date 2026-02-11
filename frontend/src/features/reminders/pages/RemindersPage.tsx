@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useReminders, useCreateReminder, useCancelReminder, useSnoozeReminder } from '@/features/reminders'
 
 export function RemindersPage() {
@@ -13,7 +13,7 @@ export function RemindersPage() {
 
   const reminders = remindersData?.content ?? []
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!titulo.trim() || !scheduleAt) return
     createReminder.mutate(

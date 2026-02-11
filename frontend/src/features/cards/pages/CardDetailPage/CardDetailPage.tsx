@@ -8,6 +8,8 @@ import {
   useChecklist, useAddChecklistItem, useToggleChecklistItem, useDeleteChecklistItem,
 } from '@/features/cards/api/useCardExtras'
 import { useAiAction } from '@/features/ai'
+import { SubtaskModal } from '@/features/cards/components/SubtaskModal'
+import type { ChecklistItemData } from '@/shared/types'
 
 export function CardDetailPage() {
   const { cardId } = useParams<{ cardId: string }>()
@@ -36,6 +38,9 @@ export function CardDetailPage() {
   const [newCheckItem, setNewCheckItem] = useState('')
   const [aiResult, setAiResult] = useState<string | null>(null)
   const [showAi, setShowAi] = useState(false)
+  const [selectedSubtask, setSelectedSubtask] = useState<ChecklistItemData | null>(null)
+  const [editingDueDate, setEditingDueDate] = useState(false)
+  const [dueDateInput, setDueDateInput] = useState('')
 
   if (isLoading || !card) {
     return (
@@ -95,6 +100,16 @@ export function CardDetailPage() {
       { action, cardId: card.id },
       { onSuccess: (res) => setAiResult(res.content) }
     )
+  }
+
+  const handleToggleAiEnabled = () => {
+    updateCard.mutate({ id: card.id, data: { aiEnabled: !card.aiEnabled } })
+  }
+
+  const handleSaveDueDate = () => {
+    const newDate = dueDateInput ? new Date(dueDateInput).toISOString() : null
+    updateCard.mutate({ id: card.id, data: { dueDate: newDate } })
+    setEditingDueDate(false)
   }
 
   return (
@@ -158,13 +173,52 @@ export function CardDetailPage() {
             <span className={`status-badge status-${card.status.toLowerCase()}`}>
               {card.status}
             </span>
-            {card.dueDate && (
-              <span className="meta-item">
-                📅 {new Date(card.dueDate).toLocaleDateString('pt-BR')}
+            {editingDueDate ? (
+              <span className="meta-item" style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                <input
+                  className="input"
+                  type="date"
+                  value={dueDateInput}
+                  onChange={(e) => setDueDateInput(e.target.value)}
+                  autoFocus
+                  style={{ width: 'auto', padding: '4px 8px', fontSize: '0.8125rem' }}
+                />
+                <button type="button" className="btn btn-primary btn-sm" onClick={handleSaveDueDate}>✓</button>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditingDueDate(false)}>✕</button>
               </span>
+            ) : (
+              <button
+                type="button"
+                className="meta-item meta-item-clickable"
+                onClick={() => {
+                  setDueDateInput(card.dueDate ? card.dueDate.split('T')[0] : '')
+                  setEditingDueDate(true)
+                }}
+              >
+                📅 {card.dueDate
+                  ? new Date(card.dueDate).toLocaleDateString('pt-BR')
+                  : 'Definir prazo'}
+              </button>
             )}
             <span className="meta-item">
               Criado em {new Date(card.createdAt).toLocaleDateString('pt-BR')}
+            </span>
+          </div>
+
+          {/* AI Toggle */}
+          <div className="card-detail-ai-toggle">
+            <button
+              type="button"
+              className={`btn btn-sm ${card.aiEnabled ? 'btn-ai-active' : 'btn-ghost'}`}
+              onClick={handleToggleAiEnabled}
+              title={card.aiEnabled ? 'IA gera insights deste card' : 'IA não gera insights deste card'}
+            >
+              🤖 {card.aiEnabled ? 'Insights IA: Ativado' : 'Insights IA: Desativado'}
+            </button>
+            <span className="settings-hint" style={{ margin: 0 }}>
+              {card.aiEnabled
+                ? 'Dados deste card serão enviados para gerar insights'
+                : 'Este card não será usado para gerar insights (economiza tokens)'}
             </span>
           </div>
 
@@ -211,10 +265,10 @@ export function CardDetailPage() {
             )}
           </section>
 
-          {/* Checklist */}
+          {/* Checklist / Subtasks */}
           <section className="card-detail-section">
             <h2 className="section-title">
-              ☑️ Checklist
+              ☑️ Subtarefas
               {checklistItems.length > 0 && (
                 <span className="checklist-progress">
                   {' '}({checklistDone}/{checklistItems.length})
@@ -242,9 +296,14 @@ export function CardDetailPage() {
                   >
                     {item.concluido ? '✓' : ''}
                   </button>
-                  <span className={`checklist-text ${item.concluido ? 'done' : ''}`}>
+                  <button
+                    type="button"
+                    className={`checklist-text-btn ${item.concluido ? 'done' : ''}`}
+                    onClick={() => setSelectedSubtask(item)}
+                    title="Clique para abrir detalhes"
+                  >
                     {item.texto}
-                  </span>
+                  </button>
                   <button
                     type="button"
                     className="btn btn-ghost btn-icon btn-sm"
@@ -261,8 +320,8 @@ export function CardDetailPage() {
                 className="input"
                 value={newCheckItem}
                 onChange={(e) => setNewCheckItem(e.target.value)}
-                placeholder="Novo item..."
-                aria-label="Novo item de checklist"
+                placeholder="Nova subtarefa..."
+                aria-label="Nova subtarefa"
               />
               <button type="submit" className="btn btn-secondary" disabled={addChecklistItem.isPending}>
                 +
@@ -340,6 +399,16 @@ export function CardDetailPage() {
           </aside>
         )}
       </div>
+
+      {/* Subtask Modal */}
+      {selectedSubtask && (
+        <SubtaskModal
+          item={selectedSubtask}
+          onClose={() => setSelectedSubtask(null)}
+          onToggle={(id) => toggleChecklistItem.mutate(id)}
+          onDelete={(id) => deleteChecklistItem.mutate(id)}
+        />
+      )}
     </div>
   )
 }

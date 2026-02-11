@@ -6,4 +6,13 @@ export const aiApi = {
         const { data } = await api.post<AiActionResponse>('/ai/action', request)
         return data
     },
+
+    /** Gera insights para todos os cards com aiEnabled=true */
+    generateInsights: async (boardId: string) => {
+        const { data } = await api.post<AiActionResponse>('/ai/action', {
+            action: 'board-insights',
+            cardId: boardId,
+        })
+        return data
+    },
 }

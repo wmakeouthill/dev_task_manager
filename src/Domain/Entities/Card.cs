@@ -20,6 +20,7 @@ public class Card
     public CardStatus Status { get; private set; }
     public int Ordem { get; private set; }
     public DateTime? DueDate { get; private set; }
+    public bool AiEnabled { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
     private Card() { }
@@ -37,6 +38,7 @@ public class Card
             Status = CardStatus.Todo,
             Ordem = ordem,
             DueDate = null,
+            AiEnabled = false,
             CreatedAt = DateTime.UtcNow
         };
     }
@@ -77,5 +79,10 @@ public class Card
         if (ordem < 0)
             throw new RegraDeNegocioException("Ordem do card não pode ser negativa.");
         Ordem = ordem;
+    }
+
+    public void DefinirAiEnabled(bool enabled)
+    {
+        AiEnabled = enabled;
     }
 }

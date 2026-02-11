@@ -17,6 +17,8 @@ public class UpdateCardService(ICardRepository repository)
             card.AtualizarDescricao(request.Descricao);
         if (request.DueDate.HasValue)
             card.DefinirDueDate(request.DueDate);
+        if (request.AiEnabled.HasValue)
+            card.DefinirAiEnabled(request.AiEnabled.Value);
 
         await repository.UpdateAsync(card, ct);
         return CardDto.From(card);

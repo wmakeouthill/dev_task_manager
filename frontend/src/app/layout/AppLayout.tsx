@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
 import { useCurrentUser } from '@/features/dashboard'
+import { useSidebarCollapse } from '@/shared/hooks/useSidebarCollapse'
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { collapsed, toggle: toggleCollapse } = useSidebarCollapse()
   const { data: user } = useCurrentUser()
 
   return (
-    <div className="app-layout">
+    <div className={`app-layout ${collapsed ? 'sidebar-collapsed' : ''}`}>
       <aside
-        className={`app-sidebar ${sidebarOpen ? 'open' : ''}`}
+        className={`app-sidebar ${sidebarOpen ? 'open' : ''} ${collapsed ? 'collapsed' : ''}`}
         aria-label="Navegação"
       >
         {/* User section */}
@@ -25,10 +27,12 @@ export function AppLayout() {
               {(user?.displayName ?? 'D')[0].toUpperCase()}
             </div>
           )}
-          <div className="sidebar-user-info">
-            <span className="sidebar-user-name">{user?.displayName ?? 'Dev'}</span>
-            <span className="sidebar-user-role">Developer</span>
-          </div>
+          {!collapsed && (
+            <div className="sidebar-user-info">
+              <span className="sidebar-user-name">{user?.displayName ?? 'Dev'}</span>
+              <span className="sidebar-user-role">Developer</span>
+            </div>
+          )}
         </div>
 
         <nav className="app-sidebar-nav">
@@ -39,8 +43,10 @@ export function AppLayout() {
             }
             end
             onClick={() => setSidebarOpen(false)}
+            title="Início"
           >
-            🏠 Início
+            <span className="sidebar-link-icon">🏠</span>
+            {!collapsed && <span className="sidebar-link-label">Início</span>}
           </NavLink>
           <NavLink
             to="/boards"
@@ -48,8 +54,10 @@ export function AppLayout() {
               `app-sidebar-link ${isActive ? 'active' : ''}`
             }
             onClick={() => setSidebarOpen(false)}
+            title="Boards"
           >
-            📋 Boards
+            <span className="sidebar-link-icon">📋</span>
+            {!collapsed && <span className="sidebar-link-label">Boards</span>}
           </NavLink>
           <NavLink
             to="/reminders"
@@ -57,14 +65,54 @@ export function AppLayout() {
               `app-sidebar-link ${isActive ? 'active' : ''}`
             }
             onClick={() => setSidebarOpen(false)}
+            title="Lembretes"
           >
-            🔔 Lembretes
+            <span className="sidebar-link-icon">🔔</span>
+            {!collapsed && <span className="sidebar-link-label">Lembretes</span>}
+          </NavLink>
+          <NavLink
+            to="/insights"
+            className={({ isActive }) =>
+              `app-sidebar-link ${isActive ? 'active' : ''}`
+            }
+            onClick={() => setSidebarOpen(false)}
+            title="Insights IA"
+          >
+            <span className="sidebar-link-icon">🤖</span>
+            {!collapsed && <span className="sidebar-link-label">Insights IA</span>}
+          </NavLink>
+
+          <div className="sidebar-separator" />
+
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              `app-sidebar-link ${isActive ? 'active' : ''}`
+            }
+            onClick={() => setSidebarOpen(false)}
+            title="Configurações"
+          >
+            <span className="sidebar-link-icon">⚙️</span>
+            {!collapsed && <span className="sidebar-link-label">Configurações</span>}
           </NavLink>
         </nav>
 
+        {/* Collapse toggle (desktop) */}
+        <div className="sidebar-collapse-toggle">
+          <button
+            type="button"
+            className="btn btn-ghost btn-icon btn-sm"
+            onClick={toggleCollapse}
+            aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+            title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+          >
+            {collapsed ? '»' : '«'}
+          </button>
+        </div>
+
         <div className="sidebar-footer">
-          <span className="sidebar-app-name">Dev Task Manager</span>
-          <span className="sidebar-version">v0.1.0</span>
+          {!collapsed && <span className="sidebar-app-name">Dev Task Manager</span>}
+          <span className="sidebar-version">v0.2.0</span>
         </div>
       </aside>
 

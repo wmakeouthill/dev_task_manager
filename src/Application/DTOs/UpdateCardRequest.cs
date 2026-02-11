@@ -1,3 +1,3 @@
 namespace DevTaskManager.Application.DTOs;
 
-public record UpdateCardRequest(string? Titulo, string? Descricao, DateTime? DueDate);
+public record UpdateCardRequest(string? Titulo, string? Descricao, DateTime? DueDate, bool? AiEnabled = null);

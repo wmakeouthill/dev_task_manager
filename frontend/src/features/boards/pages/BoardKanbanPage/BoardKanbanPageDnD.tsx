@@ -17,10 +17,12 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useBoard, useAddColumn } from '@/features/boards'
+import { useBoard, useAddColumn, useUpdateColumn, useDeleteColumn } from '@/features/boards'
 import { useCards, useCreateCard, useMoveCard } from '@/features/cards'
+import { ColumnSettingsModal } from '@/features/boards/components/ColumnSettingsModal'
 import type { ColumnDto } from '@/features/boards/types/board.types'
 import type { Card } from '@/features/cards/types/card.types'
+import type { UpdateColumnRequest } from '@/features/boards/api/columnApi'
 
 function SortableCard({
   card,
@@ -58,6 +60,9 @@ function SortableCard({
         >
           {card.titulo}
         </button>
+        {card.aiEnabled && (
+          <span className="kanban-card-ai-badge" title="IA habilitada">🤖</span>
+        )}
       </div>
       <div className="kanban-card-meta">
         <span className={`status-dot-sm status-${card.status.toLowerCase()}`} />
@@ -78,13 +83,15 @@ function SortableCard({
 export function BoardKanbanPage() {
   const { boardId } = useParams<{ boardId: string }>()
   const navigate = useNavigate()
-  const [newColumnNome, setNewColumnNome] = useState('')
   const [newCardTitulo, setNewCardTitulo] = useState<Record<string, string>>({})
   const [activeCard, setActiveCard] = useState<Card | null>(null)
+  const [editingColumn, setEditingColumn] = useState<ColumnDto | null>(null)
 
   const { data: board, isLoading: loadingBoard } = useBoard(boardId ?? null)
   const { data: cardsData, isLoading: loadingCards } = useCards(boardId ?? null)
   const addColumn = useAddColumn(boardId ?? null)
+  const updateColumn = useUpdateColumn(boardId ?? null)
+  const deleteColumn = useDeleteColumn(boardId ?? null)
   const createCard = useCreateCard(boardId ?? null)
   const moveCard = useMoveCard(boardId ?? null)
 
@@ -96,13 +103,9 @@ export function BoardKanbanPage() {
     useSensor(KeyboardSensor)
   )
 
-  const handleAddColumn = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newColumnNome.trim()) return
-    addColumn.mutate(
-      { nome: newColumnNome.trim(), ordem: columns.length },
-      { onSuccess: () => setNewColumnNome('') }
-    )
+  const handleAddColumn = () => {
+    const nome = `Coluna ${columns.length + 1}`
+    addColumn.mutate({ nome, ordem: columns.length })
   }
 
   const handleAddCard = (e: React.FormEvent, columnId: string) => {
@@ -118,6 +121,16 @@ export function BoardKanbanPage() {
     )
   }
 
+  const handleColumnSave = (data: UpdateColumnRequest) => {
+    if (!editingColumn) return
+    updateColumn.mutate({ id: editingColumn.id, data })
+  }
+
+  const handleColumnDelete = () => {
+    if (!editingColumn) return
+    deleteColumn.mutate(editingColumn.id)
+  }
+
   const handleDragStart = (event: DragStartEvent) => {
     const card = cards.find((c) => c.id === event.active.id)
     if (card) setActiveCard(card)
@@ -131,17 +144,14 @@ export function BoardKanbanPage() {
     const draggedCard = cards.find((c) => c.id === active.id)
     if (!draggedCard) return
 
-    // Determine target column
     let targetColumnId: string
     let targetOrder: number
 
     const overCard = cards.find((c) => c.id === over.id)
     if (overCard) {
-      // Dropped on another card
       targetColumnId = overCard.columnId
       targetOrder = overCard.ordem
     } else {
-      // Dropped on a column directly
       targetColumnId = over.id as string
       targetOrder = cards.filter((c) => c.columnId === targetColumnId).length
     }
@@ -188,19 +198,6 @@ export function BoardKanbanPage() {
         </span>
       </header>
 
-      <form onSubmit={handleAddColumn} className="kanban-add-column form-inline">
-        <input
-          className="input"
-          value={newColumnNome}
-          onChange={(e) => setNewColumnNome(e.target.value)}
-          placeholder="Nova coluna…"
-          style={{ maxWidth: 240 }}
-        />
-        <button type="submit" className="btn btn-secondary" disabled={addColumn.isPending}>
-          {addColumn.isPending ? 'Adicionando…' : '+ Coluna'}
-        </button>
-      </form>
-
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -213,19 +210,38 @@ export function BoardKanbanPage() {
               .filter((c) => c.columnId === col.id)
               .sort((a, b) => a.ordem - b.ordem)
 
+            const isOverWip = col.wipLimit != null && columnCards.length > col.wipLimit
+
             return (
               <section
                 key={col.id}
-                className="kanban-column"
+                className={`kanban-column ${isOverWip ? 'kanban-column-over-wip' : ''}`}
                 aria-labelledby={`col-${col.id}`}
               >
-                <h2 id={`col-${col.id}`} className="kanban-column-title">
-                  {col.nome}
-                  <span className="kanban-column-count">
-                    {columnCards.length}
-                    {col.wipLimit != null ? `/${col.wipLimit}` : ''}
-                  </span>
-                </h2>
+                <div className="kanban-column-header">
+                  <h2 id={`col-${col.id}`} className="kanban-column-title">
+                    {col.nome}
+                    <span className="kanban-column-count">
+                      {columnCards.length}
+                      {col.wipLimit != null ? `/${col.wipLimit}` : ''}
+                    </span>
+                  </h2>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-icon btn-sm kanban-column-settings-btn"
+                    onClick={() => setEditingColumn(col)}
+                    aria-label={`Configurações da coluna ${col.nome}`}
+                    title="Configurar coluna"
+                  >
+                    ✏️
+                  </button>
+                </div>
+
+                {isOverWip && (
+                  <div className="kanban-wip-warning">
+                    ⚠️ WIP excedido ({columnCards.length}/{col.wipLimit})
+                  </div>
+                )}
 
                 <SortableContext
                   items={columnCards.map((c) => c.id)}
@@ -267,6 +283,20 @@ export function BoardKanbanPage() {
               </section>
             )
           })}
+
+          {/* Notion-style Add Column Button */}
+          <button
+            type="button"
+            className="kanban-add-column-btn"
+            onClick={handleAddColumn}
+            disabled={addColumn.isPending}
+            aria-label="Adicionar nova coluna"
+            title="Adicionar coluna"
+          >
+            <span className="kanban-add-column-icon">+</span>
+            {!addColumn.isPending && <span className="kanban-add-column-text">Nova coluna</span>}
+            {addColumn.isPending && <span className="kanban-add-column-text">Criando…</span>}
+          </button>
         </div>
 
         <DragOverlay>
@@ -277,6 +307,16 @@ export function BoardKanbanPage() {
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {/* Column Settings Modal */}
+      {editingColumn && (
+        <ColumnSettingsModal
+          column={editingColumn}
+          onClose={() => setEditingColumn(null)}
+          onSave={handleColumnSave}
+          onDelete={handleColumnDelete}
+        />
+      )}
     </div>
   )
 }

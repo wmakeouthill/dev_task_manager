@@ -11,6 +11,7 @@ public record CardDto(
     string Status,
     int Ordem,
     DateTime? DueDate,
+    bool AiEnabled,
     DateTime CreatedAt)
 {
     public static CardDto From(Card c) => new(
@@ -22,5 +23,6 @@ public record CardDto(
         c.Status.ToString(),
         c.Ordem,
         c.DueDate,
+        c.AiEnabled,
         c.CreatedAt);
 }

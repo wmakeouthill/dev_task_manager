@@ -28,11 +28,23 @@ public sealed class ReminderNotificationService : IDisposable
     {
         _http = new HttpClient
         {
-            BaseAddress = new Uri("http://localhost:5000/api/v1/"),
+            BaseAddress = GetApiBaseAddress(),
             Timeout = TimeSpan.FromSeconds(10)
         };
 
         _timer = new Timer(PollReminders, null, TimeSpan.FromSeconds(5), _interval);
+    }
+
+    private static Uri GetApiBaseAddress()
+    {
+        var configured = Environment.GetEnvironmentVariable("DEV_TASK_MANAGER_API_URL");
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return new Uri(configured, UriKind.Absolute);
+        }
+
+        // Default for local development
+        return new Uri("http://localhost:5000/api/v1/", UriKind.Absolute); // NOSONAR
     }
 
     private async void PollReminders(object? state)
@@ -87,7 +99,6 @@ public sealed class ReminderNotificationService : IDisposable
     private sealed class PagedResult<T>
     {
         public List<T>? Content { get; set; }
-        public int TotalElements { get; set; }
     }
 
     private sealed class ReminderDto
@@ -95,6 +106,6 @@ public sealed class ReminderNotificationService : IDisposable
         public string Id { get; set; } = string.Empty;
         public string Mensagem { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
-        public DateTime ScheduledAt { get; set; }
+        public DateTime ScheduledAt { get; set; } = DateTime.MinValue;
     }
 }

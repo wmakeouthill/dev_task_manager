@@ -17,6 +17,7 @@ public class CardConfiguration : IEntityTypeConfiguration<Card>
         builder.Property(c => c.Status).IsRequired().HasConversion<string>();
         builder.Property(c => c.Ordem).IsRequired();
         builder.Property(c => c.DueDate);
+        builder.Property(c => c.AiEnabled).IsRequired().HasDefaultValue(false);
         builder.Property(c => c.CreatedAt).IsRequired();
         builder.HasIndex(c => c.BoardId);
         builder.HasIndex(c => c.ColumnId);
