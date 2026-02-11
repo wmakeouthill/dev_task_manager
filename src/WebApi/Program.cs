@@ -7,8 +7,26 @@ using DevTaskManager.Domain.Interfaces;
 using DevTaskManager.Application.Services;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using DevTaskManager.WebApi.Endpoints;
 using DevTaskManager.WebApi.Middleware;
+using DotNetEnv;
+
+// Carrega .env do backend (src/WebApi ou raiz do repo)
+var currentDir = Directory.GetCurrentDirectory();
+var envPaths = new[]
+{
+    Path.Combine(currentDir, ".env"),
+    Path.Combine(currentDir, "src", "WebApi", ".env")
+};
+foreach (var p in envPaths)
+{
+    if (File.Exists(p))
+    {
+        Env.Load(p);
+        break;
+    }
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +47,10 @@ builder.Services.AddHealthChecks();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Data Source=devtaskmanager.db";
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(connectionString));
+{
+    options.UseSqlite(connectionString);
+    options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+});
 
 builder.Services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
 builder.Services.AddScoped<IBoardRepository, BoardRepository>();
@@ -37,7 +58,9 @@ builder.Services.AddScoped<ICardRepository, CardRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<IChecklistItemRepository, ChecklistItemRepository>();
 builder.Services.AddScoped<IReminderRepository, ReminderRepository>();
-builder.Services.AddScoped<IAiProvider, LocalAiProvider>();
+var geminiApiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY")
+    ?? builder.Configuration["Gemini:ApiKey"];
+builder.Services.AddScoped<IAiProvider>(_ => new DevTaskManager.Infrastructure.Ai.GeminiAiProvider(geminiApiKey));
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateWorkspaceRequestValidator>();
 builder.Services.AddScoped<ListWorkspacesService>();
@@ -117,7 +140,34 @@ api.MapDashboardEndpoints();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.EnsureCreatedAsync();
+    await db.Database.MigrateAsync();
+    // Garante que todas as tabelas existam (útil quando a migração já estava no histórico mas o banco era antigo).
+    await EnsureAllTablesAsync(db);
 }
 
 app.Run();
+
+static async Task EnsureAllTablesAsync(AppDbContext db)
+{
+    var statements = new[]
+    {
+        "CREATE TABLE IF NOT EXISTS workspaces (Id TEXT NOT NULL PRIMARY KEY, Nome TEXT NOT NULL, OwnerId TEXT NOT NULL, CreatedAt TEXT NOT NULL)",
+        "CREATE INDEX IF NOT EXISTS IX_workspaces_OwnerId ON workspaces(OwnerId)",
+        "CREATE TABLE IF NOT EXISTS boards (Id TEXT NOT NULL PRIMARY KEY, WorkspaceId TEXT NOT NULL, Nome TEXT NOT NULL, CreatedAt TEXT NOT NULL)",
+        "CREATE INDEX IF NOT EXISTS IX_boards_WorkspaceId ON boards(WorkspaceId)",
+        "CREATE TABLE IF NOT EXISTS columns (Id TEXT NOT NULL PRIMARY KEY, BoardId TEXT NOT NULL, Nome TEXT NOT NULL, Ordem INTEGER NOT NULL, WipLimit INTEGER NULL)",
+        "CREATE INDEX IF NOT EXISTS IX_columns_BoardId ON columns(BoardId)",
+        "CREATE TABLE IF NOT EXISTS cards (Id TEXT NOT NULL PRIMARY KEY, BoardId TEXT NOT NULL, ColumnId TEXT NOT NULL, Titulo TEXT NOT NULL, Descricao TEXT NULL, Status TEXT NOT NULL, Ordem INTEGER NOT NULL, DueDate TEXT NULL, CreatedAt TEXT NOT NULL)",
+        "CREATE INDEX IF NOT EXISTS IX_cards_BoardId ON cards(BoardId)",
+        "CREATE INDEX IF NOT EXISTS IX_cards_ColumnId ON cards(ColumnId)",
+        "CREATE TABLE IF NOT EXISTS comments (Id TEXT NOT NULL PRIMARY KEY, CardId TEXT NOT NULL, Autor TEXT NOT NULL, Texto TEXT NOT NULL, CreatedAt TEXT NOT NULL)",
+        "CREATE INDEX IF NOT EXISTS IX_comments_CardId ON comments(CardId)",
+        "CREATE TABLE IF NOT EXISTS checklist_items (Id TEXT NOT NULL PRIMARY KEY, CardId TEXT NOT NULL, Texto TEXT NOT NULL, Concluido INTEGER NOT NULL, Ordem INTEGER NOT NULL, CreatedAt TEXT NOT NULL)",
+        "CREATE INDEX IF NOT EXISTS IX_checklist_items_CardId ON checklist_items(CardId)",
+        "CREATE TABLE IF NOT EXISTS reminders (Id TEXT NOT NULL PRIMARY KEY, CardId TEXT NULL, Titulo TEXT NOT NULL, Descricao TEXT NULL, ScheduleAt TEXT NOT NULL, Status TEXT NOT NULL, Recurrence TEXT NOT NULL, RecurrenceDays INTEGER NULL, SnoozeUntil TEXT NULL, CreatedAt TEXT NOT NULL)",
+        "CREATE INDEX IF NOT EXISTS IX_reminders_CardId ON reminders(CardId)",
+        "CREATE INDEX IF NOT EXISTS IX_reminders_Status_ScheduleAt ON reminders(Status, ScheduleAt)"
+    };
+    foreach (var sql in statements)
+        await db.Database.ExecuteSqlRawAsync(sql);
+}

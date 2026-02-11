@@ -9,6 +9,7 @@ As regras de desenvolvimento estão em **regras-desenvolvimento-.net-react/** (b
 - .NET 9 SDK
 - Node.js 18+
 - Windows (para o host WPF e WebView2)
+- **IA (Gemini):** para o assistente de IA nos cards, configure a chave da API Google Gemini em `appsettings.json` (`Gemini:ApiKey`) ou na variável de ambiente `GEMINI_API_KEY`. Obtenha a chave em [Google AI Studio](https://aistudio.google.com/apikey).
 
 ## Como rodar
 
@@ -33,6 +34,8 @@ Ao fechar a janela do app, o script encerra backend e frontend.
 ### Passo a passo (desenvolvimento)
 
 #### 1. Backend (API)
+
+Se você já tinha um banco SQLite antigo (criado antes das migrações), **apague o arquivo** `src/WebApi/devtaskmanager.db` e suba a API de novo para o esquema ser criado corretamente (todas as tabelas: workspaces, boards, columns, cards, comments, checklist_items, reminders).
 
 ```bash
 dotnet run --project src/WebApi

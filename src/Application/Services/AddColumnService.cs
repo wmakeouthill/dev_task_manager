@@ -22,7 +22,7 @@ public class AddColumnService(
 
         var ordem = request.Ordem ?? board.Columns.Count;
         var column = board.AdicionarColuna(request.Nome, ordem);
-        await boardRepository.UpdateAsync(board, ct);
+        await boardRepository.AddColumnAsync(column, ct);
         return ColumnDto.From(column);
     }
 }

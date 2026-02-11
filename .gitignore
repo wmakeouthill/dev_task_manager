@@ -127,6 +127,12 @@ htmlcov/
 TestResults/
 
 # =============================
+# Banco de dados (SQLite local)
+# =============================
+# Arquivos .db são gerados localmente; o schema fica nas migrações EF Core
+*.db
+
+# =============================
 # Segredos e ambiente
 # =============================
 # Manter .env.example versionado; ignorar .env com dados reais

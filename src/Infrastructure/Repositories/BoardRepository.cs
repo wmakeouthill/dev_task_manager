@@ -45,7 +45,15 @@ public class BoardRepository(AppDbContext context) : IBoardRepository
 
     public async Task UpdateAsync(Board board, CancellationToken ct = default)
     {
-        context.Boards.Update(board);
+        var entry = context.Entry(board);
+        if (entry.State == EntityState.Detached)
+            context.Boards.Update(board);
+        await context.SaveChangesAsync(ct);
+    }
+
+    public async Task AddColumnAsync(Column column, CancellationToken ct = default)
+    {
+        context.Columns.Add(column);
         await context.SaveChangesAsync(ct);
     }
 
