@@ -7,7 +7,7 @@ export function useAddColumn(boardId: string | null) {
     mutationFn: (data: CreateColumnRequest) =>
       columnApi.adicionar(boardId!, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['boards', boardId] })
+      queryClient.invalidateQueries({ queryKey: ['board', boardId] })
       queryClient.invalidateQueries({ queryKey: ['boards'] })
     },
   })

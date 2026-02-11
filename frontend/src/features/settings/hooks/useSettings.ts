@@ -3,14 +3,24 @@ import type { AppSettings } from '../types/settings.types'
 import { DEFAULT_SETTINGS } from '../types/settings.types'
 
 const STORAGE_KEY = 'devtaskmanager:settings'
+let cachedRaw: string | null = null
+let cachedSnapshot: AppSettings = DEFAULT_SETTINGS
 
 function getSnapshot(): AppSettings {
     try {
         const raw = localStorage.getItem(STORAGE_KEY)
-        if (!raw) return DEFAULT_SETTINGS
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) }
+        if (raw === cachedRaw) return cachedSnapshot
+        cachedRaw = raw
+        if (!raw) {
+            cachedSnapshot = DEFAULT_SETTINGS
+            return cachedSnapshot
+        }
+        cachedSnapshot = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) }
+        return cachedSnapshot
     } catch {
-        return DEFAULT_SETTINGS
+        cachedRaw = null
+        cachedSnapshot = DEFAULT_SETTINGS
+        return cachedSnapshot
     }
 }
 

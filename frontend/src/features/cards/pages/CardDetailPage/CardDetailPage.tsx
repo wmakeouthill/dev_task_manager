@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -9,7 +9,10 @@ import {
 } from '@/features/cards/api/useCardExtras'
 import { useAiAction } from '@/features/ai'
 import { SubtaskModal } from '@/features/cards/components/SubtaskModal'
+import { SlashCommandMenu, SLASH_COMMANDS, filterSlashCommands } from '@/features/cards/components/SlashCommandMenu'
+import { getCaretCoordinates } from '@/features/cards/components/SlashCommandMenu/getCaretCoordinates'
 import type { ChecklistItemData } from '@/shared/types'
+import type { SlashCommand } from '@/features/cards/components/SlashCommandMenu'
 
 export function CardDetailPage() {
   const { cardId } = useParams<{ cardId: string }>()
@@ -41,6 +44,107 @@ export function CardDetailPage() {
   const [selectedSubtask, setSelectedSubtask] = useState<ChecklistItemData | null>(null)
   const [editingDueDate, setEditingDueDate] = useState(false)
   const [dueDateInput, setDueDateInput] = useState('')
+  const [slashOpen, setSlashOpen] = useState(false)
+  const [slashStart, setSlashStart] = useState(0)
+  const [slashFilter, setSlashFilter] = useState('')
+  const [slashSelectedIndex, setSlashSelectedIndex] = useState(0)
+  const [slashCursorPos, setSlashCursorPos] = useState(0)
+  const [slashPosition, setSlashPosition] = useState<{ top: number; left: number } | null>(null)
+  const descTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const pendingCursorRef = useRef<number | null>(null)
+
+  const filteredSlashCommands = useMemo(
+    () => filterSlashCommands(SLASH_COMMANDS, slashFilter),
+    [slashFilter]
+  )
+
+  useEffect(() => {
+    const ta = descTextareaRef.current
+    if (ta && pendingCursorRef.current !== null) {
+      const pos = pendingCursorRef.current
+      ta.focus()
+      ta.setSelectionRange(pos, pos)
+      pendingCursorRef.current = null
+    }
+  }, [descInput])
+
+  useEffect(() => {
+    if (!slashOpen || !descTextareaRef.current) {
+      setSlashPosition(null)
+      return
+    }
+    const ta = descTextareaRef.current
+    const pos = slashCursorPos
+    const raf = requestAnimationFrame(() => {
+      try {
+        const coords = getCaretCoordinates(ta, pos)
+        setSlashPosition(coords)
+      } catch {
+        setSlashPosition(null)
+      }
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [slashOpen, slashCursorPos, descInput])
+
+  const applySlashCommand = (cmd: SlashCommand, selectionStart: number) => {
+    const before = descInput.slice(0, slashStart)
+    const after = descInput.slice(selectionStart)
+    const insert = cmd.prefix + cmd.suffix
+    const newValue = before + insert + after
+    setDescInput(newValue)
+    const newCursor = cmd.cursorAfterPrefix
+      ? slashStart + cmd.prefix.length
+      : slashStart + insert.length
+    pendingCursorRef.current = newCursor
+    setSlashOpen(false)
+  }
+
+  const handleDescChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value
+    const pos = e.target.selectionStart ?? 0
+    setDescInput(value)
+    if (slashOpen) {
+      if (value[slashStart] !== '/') {
+        setSlashOpen(false)
+      } else {
+        setSlashFilter(value.slice(slashStart + 1, pos))
+        setSlashCursorPos(pos)
+      }
+    } else {
+      if (pos > 0 && value[pos - 1] === '/') {
+        setSlashStart(pos - 1)
+        setSlashFilter('')
+        setSlashSelectedIndex(0)
+        setSlashCursorPos(pos)
+        setSlashOpen(true)
+      }
+    }
+  }
+
+  const handleDescKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!slashOpen) return
+    const count = filteredSlashCommands.length
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        setSlashSelectedIndex((i) => (i + 1) % Math.max(1, count))
+        return
+      case 'ArrowUp':
+        e.preventDefault()
+        setSlashSelectedIndex((i) => (i - 1 + count) % Math.max(1, count))
+        return
+      case 'Enter':
+        e.preventDefault()
+        if (count > 0) {
+          applySlashCommand(filteredSlashCommands[slashSelectedIndex], e.currentTarget.selectionStart ?? slashStart + 1 + slashFilter.length)
+        }
+        return
+      case 'Escape':
+        e.preventDefault()
+        setSlashOpen(false)
+        return
+    }
+  }
 
   if (isLoading || !card) {
     return (
@@ -228,13 +332,26 @@ export function CardDetailPage() {
             {editingDesc ? (
               <div className="card-detail-desc-edit">
                 <textarea
+                  ref={descTextareaRef}
                   className="input card-detail-textarea"
                   value={descInput}
-                  onChange={(e) => setDescInput(e.target.value)}
+                  onChange={handleDescChange}
+                  onKeyDown={handleDescKeyDown}
                   rows={12}
-                  placeholder="Escreva em Markdown..."
+                  placeholder="Escreva em Markdown... Digite / para comandos de formatação"
                   autoFocus
                 />
+                {slashOpen && (
+                  <SlashCommandMenu
+                    open={slashOpen}
+                    filteredCommands={filteredSlashCommands}
+                    selectedIndex={filteredSlashCommands.length === 0 ? 0 : Math.min(slashSelectedIndex, filteredSlashCommands.length - 1)}
+                    onSelectIndex={setSlashSelectedIndex}
+                    onSelect={(cmd) => applySlashCommand(cmd, descTextareaRef.current?.selectionStart ?? slashStart + 1 + slashFilter.length)}
+                    onClose={() => setSlashOpen(false)}
+                    position={slashPosition}
+                  />
+                )}
                 <div className="card-detail-desc-actions">
                   <button type="button" className="btn btn-primary" onClick={handleSaveDesc}>
                     Salvar

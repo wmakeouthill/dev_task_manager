@@ -6,7 +6,7 @@ export function useDeleteColumn(boardId: string | null) {
     return useMutation({
         mutationFn: (id: string) => columnApi.excluir(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['boards', boardId] })
+            queryClient.invalidateQueries({ queryKey: ['board', boardId] })
             queryClient.invalidateQueries({ queryKey: ['boards'] })
         },
     })

@@ -7,7 +7,7 @@ export function useUpdateColumn(boardId: string | null) {
         mutationFn: ({ id, data }: { id: string; data: UpdateColumnRequest }) =>
             columnApi.atualizar(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['boards', boardId] })
+            queryClient.invalidateQueries({ queryKey: ['board', boardId] })
             queryClient.invalidateQueries({ queryKey: ['boards'] })
         },
     })

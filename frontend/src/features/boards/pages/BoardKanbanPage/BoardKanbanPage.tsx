@@ -113,11 +113,10 @@ export function BoardKanbanPage() {
               >
                 <h2 id={`col-${col.id}`} className="kanban-column-title">
                   {col.nome}
-                  {col.wipLimit != null && (
-                    <span className="kanban-column-count">
-                      {' '}({columnCards.length}/{col.wipLimit})
-                    </span>
-                  )}
+                  <span className="kanban-column-count">
+                    {columnCards.length}
+                    {col.wipLimit != null ? `/${col.wipLimit}` : ''}
+                  </span>
                 </h2>
 
                 <ul className="kanban-cards" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
