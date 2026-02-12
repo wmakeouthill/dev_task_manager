@@ -1,9 +1,37 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDashboard, useCurrentUser } from '@/features/dashboard'
 import { useReminders } from '@/features/reminders'
 import { useAiAction } from '@/features/ai'
 import { MarkdownWithCode } from '@/shared/components/MarkdownWithCode'
+
+const DAILY_INSIGHT_KEY = 'devtaskmanager:daily-insight'
+const DAILY_INSIGHT_TTL = 24 * 60 * 60 * 1000 // 1 dia
+
+interface CachedInsight {
+  content: string
+  timestamp: number
+}
+
+function getCachedDailyInsight(): string | null {
+  try {
+    const raw = localStorage.getItem(DAILY_INSIGHT_KEY)
+    if (!raw) return null
+    const cached: CachedInsight = JSON.parse(raw)
+    if (Date.now() - cached.timestamp > DAILY_INSIGHT_TTL) {
+      localStorage.removeItem(DAILY_INSIGHT_KEY)
+      return null
+    }
+    return cached.content
+  } catch {
+    return null
+  }
+}
+
+function saveDailyInsight(content: string) {
+  const cached: CachedInsight = { content, timestamp: Date.now() }
+  localStorage.setItem(DAILY_INSIGHT_KEY, JSON.stringify(cached))
+}
 
 export function HomePage() {
   const navigate = useNavigate()
@@ -12,6 +40,12 @@ export function HomePage() {
   const { data: remindersData } = useReminders()
   const aiAction = useAiAction()
   const [dailyInsight, setDailyInsight] = useState<string | null>(null)
+
+  // Carregar insight do cache local ao montar
+  useEffect(() => {
+    const cached = getCachedDailyInsight()
+    if (cached) setDailyInsight(cached)
+  }, [])
 
   const reminders = remindersData?.content?.filter((r) => r.status === 'Pending') ?? []
   const greeting = getGreeting()
@@ -241,7 +275,12 @@ export function HomePage() {
                 onClick={() => {
                   aiAction.mutate(
                     { action: 'daily-insights', cardId: '00000000-0000-0000-0000-000000000000' },
-                    { onSuccess: (res) => setDailyInsight(res.content) }
+                    {
+                      onSuccess: (res) => {
+                        setDailyInsight(res.content)
+                        saveDailyInsight(res.content)
+                      },
+                    }
                   )
                 }}
               >

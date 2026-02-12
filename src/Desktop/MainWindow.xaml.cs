@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using DevTaskManager.Desktop.Services;
 
 namespace DevTaskManager.Desktop;
 
@@ -8,8 +9,6 @@ namespace DevTaskManager.Desktop;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private const string FrontendUrl = "http://localhost:5173";
-
     public MainWindow()
     {
         InitializeComponent();
@@ -19,6 +18,23 @@ public partial class MainWindow : Window
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         await AppWebView.EnsureCoreWebView2Async();
-        AppWebView.Source = new Uri(FrontendUrl);
+
+        var url = WebApiHostService.FrontendUrl;
+        if (WebApiHostService.IsPackaged && (Application.Current as App)?.WebApiHost is { } host)
+        {
+            var ready = await host.EnsureApiRunningAsync();
+            if (!ready)
+            {
+                MessageBox.Show(
+                    "Não foi possível iniciar a API. Verifique se os arquivos estão completos na pasta do aplicativo.",
+                    "Dev Task Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                Close();
+                return;
+            }
+        }
+
+        AppWebView.Source = new Uri(url);
     }
 }

@@ -48,6 +48,7 @@ nuget.exe
 
 # .NET Core
 project.assets.json
+publish/
 project.fragment.lock.json
 artifacts/
 

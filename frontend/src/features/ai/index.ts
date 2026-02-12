@@ -1,6 +1,7 @@
 export { useAiAction } from './api/useAiAction'
 export { useAiChat } from './api/useAiChat'
 export { usePerCardInsights } from './api/usePerCardInsights'
+export { useInsights, useSaveInsights, useDeleteInsight, useDeleteAllInsights } from './api/useInsights'
 export { getAiHeaders } from './api/aiHeaders'
 export { InsightsPage } from './pages/InsightsPage'
 export { InsightsDropdown } from './components/InsightsDropdown'

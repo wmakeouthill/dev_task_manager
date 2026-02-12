@@ -195,7 +195,7 @@ export const ChatPanel = forwardRef<ChatPanelHandle, ChatPanelProps>(function Ch
         handleSend(labels[action] ?? action)
     }
 
-    /** Aceitar uma sugestão específica pelo índice */
+    /** Aceitar uma sugestão específica pelo índice (aceita tudo de uma vez) */
     const handleAcceptSuggestion = (msg: ChatMessage, suggestionIndex: number) => {
         const suggestion = msg.suggestions?.[suggestionIndex]
         if (!suggestion) return
@@ -205,6 +205,11 @@ export const ChatPanel = forwardRef<ChatPanelHandle, ChatPanelProps>(function Ch
             onAcceptSubtasks(suggestion.subtaskItems)
         }
         removeSuggestion(msg.id, suggestionIndex)
+    }
+
+    /** Aceitar uma subtarefa individual */
+    const handleAcceptSingleSubtask = (item: string) => {
+        onAcceptSubtasks([item])
     }
 
     /** Rejeitar uma sugestão específica pelo índice */
@@ -387,6 +392,7 @@ export const ChatPanel = forwardRef<ChatPanelHandle, ChatPanelProps>(function Ch
                                 suggestion={suggestion}
                                 onAccept={() => handleAcceptSuggestion(msg, idx)}
                                 onReject={() => handleRejectSuggestion(msg.id, idx)}
+                                onAcceptSingleSubtask={handleAcceptSingleSubtask}
                             />
                         ))}
                     </div>

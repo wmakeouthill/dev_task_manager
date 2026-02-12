@@ -58,6 +58,35 @@ export interface PerCardInsightsResponse {
     totalDurationMs: number
 }
 
+/** Insight persistido no banco */
+export interface PersistedInsight {
+    id: string
+    cardId: string
+    cardTitle: string
+    status: string
+    content: string
+    provider: string
+    action: string
+    durationMs: number
+    createdAt: string
+}
+
+/** Request para salvar insights no banco */
+export interface SaveInsightsRequest {
+    action: string
+    insights: SaveInsightItem[]
+    totalDurationMs: number
+}
+
+export interface SaveInsightItem {
+    cardId: string
+    cardTitle: string
+    status: string
+    content: string
+    provider: string
+    durationMs: number
+}
+
 /** Mensagem no histórico de chat IA */
 export interface AiChatMessage {
     role: 'user' | 'assistant'

@@ -71,6 +71,25 @@ dotnet run --project src/Desktop
 - **frontend/src** – App React (estrutura feature-based: `app/`, `features/`, `shared/`, `lib/`).
 - **docs/** – Visão do produto, modelo de domínio, plano de backend/frontend, IA/notificações, estratégia de testes.
 
+## Empacotamento portátil (Windows 10/11)
+
+Para gerar uma versão **portátil** que funciona sem instalar .NET ou Node.js:
+
+```powershell
+.\publish-portable.ps1
+```
+
+A pasta `publish/` conterá:
+- **DevTaskManager.Desktop.exe** – executável principal (launcher)
+- **DevTaskManager.WebApi.exe** – API + SPA (iniciado automaticamente pelo Desktop)
+- `appsettings.json`, `devtaskmanager.db` (criado na primeira execução)
+
+**Compatibilidade:**
+- **Windows 10** 1809+ (October 2018 Update) e **Windows 11**, arquitetura **x64**
+- **WebView2 Runtime:** Windows 11 já inclui. No Windows 10, pode ser necessário instalar: [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)
+
+**Uso:** copie a pasta `publish/` inteira para qualquer local (pen drive, outra máquina) e execute `DevTaskManager.Desktop.exe`.
+
 ## Testes
 
 - Backend: `dotnet test`

@@ -1,26 +1,58 @@
 import { useState } from 'react'
 import { MarkdownWithCode } from '@/shared/components/MarkdownWithCode'
-import { usePerCardInsights, InsightsDropdown } from '@/features/ai'
+import {
+  usePerCardInsights, useInsights, useSaveInsights, useDeleteInsight, useDeleteAllInsights,
+  InsightsDropdown,
+} from '@/features/ai'
 import { useSettings, getActiveProvider, getModelLabel } from '@/features/settings'
-import type { CardInsightResult } from '@/shared/types'
+import type { PersistedInsight } from '@/shared/types'
 
 export function InsightsPage() {
   const { settings } = useSettings()
   const activeProvider = getActiveProvider(settings)
   const perCardInsights = usePerCardInsights()
-  const [insights, setInsights] = useState<CardInsightResult[]>([])
-  const [totalDuration, setTotalDuration] = useState<number | null>(null)
+  const { data: persistedInsights, isLoading: loadingPersisted } = useInsights()
+  const saveInsights = useSaveInsights()
+  const deleteInsight = useDeleteInsight()
+  const deleteAllInsights = useDeleteAllInsights()
   const [selectedAction, setSelectedAction] = useState<string>('board-insights')
+  const [lastDuration, setLastDuration] = useState<number | null>(null)
 
   const hasApiKey = activeProvider !== null
+  const insights: PersistedInsight[] = persistedInsights ?? []
 
   const handleGenerateInsight = () => {
     perCardInsights.mutate(selectedAction, {
       onSuccess: (res) => {
-        setInsights(res.insights)
-        setTotalDuration(res.totalDurationMs)
+        setLastDuration(res.totalDurationMs)
+        // Persiste no banco automaticamente
+        if (res.insights.length > 0) {
+          saveInsights.mutate({
+            action: selectedAction,
+            insights: res.insights.map((i) => ({
+              cardId: i.cardId,
+              cardTitle: i.cardTitle,
+              status: i.status,
+              content: i.content,
+              provider: i.provider,
+              durationMs: i.durationMs,
+            })),
+            totalDurationMs: res.totalDurationMs,
+          })
+        }
       },
     })
+  }
+
+  const handleDismiss = (id: string) => {
+    deleteInsight.mutate(id)
+  }
+
+  const handleDismissAll = () => {
+    if (confirm('Remover todos os insights persistidos?')) {
+      deleteAllInsights.mutate()
+      setLastDuration(null)
+    }
   }
 
   if (!hasApiKey) {
@@ -61,6 +93,7 @@ export function InsightsPage() {
         <p className="settings-hint" style={{ marginBottom: 16 }}>
           Gere insights individuais para cada card com 🤖 IA habilitada.
           Apenas cards com a flag ativada serão analisados.
+          Os insights são persistidos até você removê-los.
         </p>
         <div className="insights-select-wrap">
           <InsightsDropdown
@@ -76,6 +109,17 @@ export function InsightsPage() {
           >
             {perCardInsights.isPending ? '⏳ Gerando…' : '✨ Gerar insights'}
           </button>
+          {insights.length > 0 && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-danger"
+              onClick={handleDismissAll}
+              disabled={deleteAllInsights.isPending}
+              title="Remover todos os insights"
+            >
+              🗑️ Limpar tudo
+            </button>
+          )}
         </div>
         <p className="settings-hint" style={{ marginTop: 8 }}>
           {activeProvider
@@ -93,25 +137,37 @@ export function InsightsPage() {
         </section>
       )}
 
-      {insights.length > 0 && !perCardInsights.isPending && (
+      {!loadingPersisted && insights.length > 0 && !perCardInsights.isPending && (
         <>
           <div className="insights-summary">
-            <span>{insights.length} card(s) analisado(s)</span>
-            {totalDuration !== null && (
+            <span>{insights.length} insight(s) salvo(s)</span>
+            {lastDuration !== null && (
               <span className="insights-duration">
-                ⏱ {(totalDuration / 1000).toFixed(1)}s total
+                ⏱ {(lastDuration / 1000).toFixed(1)}s última geração
               </span>
             )}
           </div>
 
           <div className="insights-grid">
             {insights.map((insight) => (
-              <section key={insight.cardId} className="card insights-card">
+              <section key={insight.id} className="card insights-card">
                 <div className="insights-card-header">
                   <h3 className="insights-card-title">{insight.cardTitle}</h3>
-                  <span className={`insights-card-status status-${insight.status.toLowerCase()}`}>
-                    {statusLabel(insight.status)}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span className={`insights-card-status status-${insight.status.toLowerCase()}`}>
+                      {statusLabel(insight.status)}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm btn-icon"
+                      onClick={() => handleDismiss(insight.id)}
+                      disabled={deleteInsight.isPending}
+                      title="Remover insight"
+                      aria-label={`Remover insight de ${insight.cardTitle}`}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
                 <div className="insights-card-body ai-result">
                   <MarkdownWithCode>{insight.content}</MarkdownWithCode>
@@ -121,6 +177,9 @@ export function InsightsPage() {
                   <span className="insights-card-duration">
                     {(insight.durationMs / 1000).toFixed(1)}s
                   </span>
+                  <span className="insights-card-date">
+                    {new Date(insight.createdAt).toLocaleString('pt-BR')}
+                  </span>
                 </div>
               </section>
             ))}
@@ -128,11 +187,11 @@ export function InsightsPage() {
         </>
       )}
 
-      {insights.length === 0 && !perCardInsights.isPending && perCardInsights.isSuccess && (
+      {!loadingPersisted && insights.length === 0 && !perCardInsights.isPending && (
         <section className="card" style={{ textAlign: 'center', padding: 24 }}>
           <p style={{ fontSize: '2rem', marginBottom: 8 }}>🤖</p>
           <p className="loading-text">
-            Nenhum card com IA habilitada encontrado. Ative a flag 🤖 nos cards que deseja analisar.
+            Nenhum insight salvo. Gere insights para os cards com IA habilitada.
           </p>
         </section>
       )}

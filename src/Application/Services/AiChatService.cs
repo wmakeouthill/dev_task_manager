@@ -109,8 +109,8 @@ public class AiChatService(ICardRepository cardRepo, IChecklistItemRepository ch
         if (checklist.Count > 0)
         {
             sb.AppendLine("- **Subtarefas existentes:**");
-            foreach (var item in checklist)
-                sb.AppendLine($"  {item}");
+            for (var i = 0; i < checklist.Count; i++)
+                sb.AppendLine($"  {i + 1}. {checklist[i]}");
         }
         else
         {
@@ -166,10 +166,15 @@ public class AiChatService(ICardRepository cardRepo, IChecklistItemRepository ch
         sb.AppendLine("Envolva a lista de subtarefas com:");
         sb.AppendLine("```");
         sb.AppendLine("<<<SUBTAREFAS>>>");
-        sb.AppendLine("- Item 1");
-        sb.AppendLine("- Item 2");
+        sb.AppendLine("1. Item 1");
+        sb.AppendLine("2. Item 2");
         sb.AppendLine("<<<FIM_SUBTAREFAS>>>");
         sb.AppendLine("```");
+        sb.AppendLine();
+        sb.AppendLine("## Referência por número");
+        sb.AppendLine("- As subtarefas existentes e sugeridas são numeradas.");
+        sb.AppendLine("- Quando o usuário mencionar um número (ex: \"altere a 3\", \"remova a subtarefa 2\", \"mude a tarefa 1\"), entenda que se refere à subtarefa pelo índice numérico.");
+        sb.AppendLine("- Ao re-sugerir subtarefas editadas, numere-as novamente começando em 1.");
         sb.AppendLine();
         sb.AppendLine("## Regras importantes");
         sb.AppendLine("- Use os delimitadores SOMENTE quando estiver sugerindo conteúdo aplicável (descrição ou subtarefas).");

@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+// Em produção (servido pela WebApi): usa URL relativa /api/v1
+// Em dev: usa localhost para falha segura se VITE_API_URL não for definido
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:5011/api/v1',
+  baseURL: import.meta.env.VITE_API_URL ?? (import.meta.env.PROD ? '/api/v1' : 'http://localhost:5011/api/v1'),
   headers: { 'Content-Type': 'application/json' },
 })
 

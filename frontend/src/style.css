@@ -3394,6 +3394,11 @@ select:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+.insights-card-date {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
 /* ===== Card Detail Section ===== */
 .card-detail-section {
   background: var(--bg-raised);
@@ -3448,9 +3453,46 @@ select:focus-visible {
   font-size: 0.875rem;
 }
 
+.ai-suggestion-subtask-item--handled {
+  opacity: 0.4;
+  text-decoration: line-through;
+  pointer-events: none;
+}
+
+.ai-suggestion-subtask-number {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  min-width: 20px;
+  flex-shrink: 0;
+}
+
+.ai-suggestion-subtask-text {
+  flex: 1;
+}
+
+.ai-suggestion-subtask-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ai-suggestion-card-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
 .ai-suggestion-subtask-checkbox {
   color: var(--text-muted);
   font-size: 0.875rem;
+}
+
+.btn-xs {
+  padding: 2px 6px;
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  min-width: 22px;
 }
 
 .ai-suggestion-card-actions {
@@ -3992,6 +4034,30 @@ select:focus-visible {
 
 .ai-inline-subtask-item:last-child {
   border-bottom: none;
+}
+
+.ai-inline-subtask-item--handled {
+  opacity: 0.4;
+  text-decoration: line-through;
+  pointer-events: none;
+}
+
+.ai-inline-subtask-number {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  min-width: 20px;
+  flex-shrink: 0;
+}
+
+.ai-inline-subtask-text {
+  flex: 1;
+}
+
+.ai-inline-subtask-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .ai-inline-subtask-checkbox {

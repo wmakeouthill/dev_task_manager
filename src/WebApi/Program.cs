@@ -58,6 +58,7 @@ builder.Services.AddScoped<ICardRepository, CardRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<IChecklistItemRepository, ChecklistItemRepository>();
 builder.Services.AddScoped<IReminderRepository, ReminderRepository>();
+builder.Services.AddScoped<IInsightRepository, InsightRepository>();
 var geminiApiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY")
     ?? builder.Configuration["Gemini:ApiKey"];
 builder.Services.AddScoped<IAiProvider>(_ => new DevTaskManager.Infrastructure.Ai.GeminiAiProvider(geminiApiKey));
@@ -99,6 +100,10 @@ builder.Services.AddScoped<CancelReminderService>();
 builder.Services.AddScoped<AiActionService>();
 builder.Services.AddScoped<AiChatService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<ListInsightsService>();
+builder.Services.AddScoped<SaveInsightsService>();
+builder.Services.AddScoped<DeleteInsightService>();
+builder.Services.AddScoped<DeleteAllInsightsService>();
 builder.Services.AddScoped<ListPendingRemindersService>();
 #pragma warning disable CA1416
 builder.Services.AddSingleton<WindowsUserService>();
@@ -124,8 +129,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.UseCors("LocalDev");
 }
+else
+{
+    // Produção/portátil: servir SPA estático do wwwroot
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+}
 
-app.UseHttpsRedirection();
+// Em produção local (portátil) não usar HTTPS para evitar problemas de certificado
+if (app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
 app.MapHealthChecks("/health");
 
 var api = app.MapGroup("/api/v1");
@@ -139,6 +152,13 @@ api.MapChecklistEndpoints();
 api.MapReminderEndpoints();
 api.MapAiEndpoints();
 api.MapDashboardEndpoints();
+api.MapInsightEndpoints();
+
+// SPA fallback: rotas do frontend (ex: /boards/123) retornam index.html
+if (!app.Environment.IsDevelopment())
+{
+    app.MapFallbackToFile("index.html");
+}
 
 using (var scope = app.Services.CreateScope())
 {
@@ -169,7 +189,9 @@ static async Task EnsureAllTablesAsync(AppDbContext db)
         "CREATE INDEX IF NOT EXISTS IX_checklist_items_CardId ON checklist_items(CardId)",
         "CREATE TABLE IF NOT EXISTS reminders (Id TEXT NOT NULL PRIMARY KEY, CardId TEXT NULL, Titulo TEXT NOT NULL, Descricao TEXT NULL, ScheduleAt TEXT NOT NULL, Status TEXT NOT NULL, Recurrence TEXT NOT NULL, RecurrenceDays INTEGER NULL, SnoozeUntil TEXT NULL, CreatedAt TEXT NOT NULL)",
         "CREATE INDEX IF NOT EXISTS IX_reminders_CardId ON reminders(CardId)",
-        "CREATE INDEX IF NOT EXISTS IX_reminders_Status_ScheduleAt ON reminders(Status, ScheduleAt)"
+        "CREATE INDEX IF NOT EXISTS IX_reminders_Status_ScheduleAt ON reminders(Status, ScheduleAt)",
+        "CREATE TABLE IF NOT EXISTS insights (Id TEXT NOT NULL PRIMARY KEY, CardId TEXT NOT NULL, CardTitle TEXT NOT NULL, Status TEXT NOT NULL, Content TEXT NOT NULL, Provider TEXT NOT NULL, Action TEXT NOT NULL, DurationMs REAL NOT NULL, CreatedAt TEXT NOT NULL)",
+        "CREATE INDEX IF NOT EXISTS IX_insights_CardId ON insights(CardId)"
     };
     foreach (var sql in statements)
         await db.Database.ExecuteSqlRawAsync(sql);

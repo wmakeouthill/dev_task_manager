@@ -39,11 +39,14 @@ export function CardDetailPage() {
 
   // Sugestões pendentes vindas do chat (para preview inline)
   const [pendingSuggestions, setPendingSuggestions] = useState<PendingSuggestion[]>([])
+  /** Índices de subtarefas inline já aceitas/rejeitadas individualmente */
+  const [handledInlineSubtasks, setHandledInlineSubtasks] = useState<Set<number>>(new Set())
   const pendingDescription = pendingSuggestions.find((s) => s.suggestion.type === 'description')
   const pendingSubtasks = pendingSuggestions.find((s) => s.suggestion.type === 'subtasks')
 
   const handlePendingSuggestionsChange = useCallback((suggestions: PendingSuggestion[]) => {
     setPendingSuggestions(suggestions)
+    setHandledInlineSubtasks(new Set())
   }, [])
 
   const CHAT_WIDTH_MIN = 280
@@ -202,8 +205,34 @@ export function CardDetailPage() {
   /** Aceitar subtarefas sugeridas inline (preview na seção de subtarefas) */
   const handleInlineAcceptSubtasks = () => {
     if (!pendingSubtasks?.suggestion.subtaskItems?.length) return
-    handleAcceptSubtasks(pendingSubtasks.suggestion.subtaskItems)
+    // Aceita apenas as que ainda não foram individualmente tratadas
+    const remaining = pendingSubtasks.suggestion.subtaskItems.filter((_, i) => !handledInlineSubtasks.has(i))
+    if (remaining.length > 0) handleAcceptSubtasks(remaining)
     chatPanelHandleRef.current?.dismissSuggestion(pendingSubtasks.msgId, pendingSubtasks.suggestionIndex)
+    setHandledInlineSubtasks(new Set())
+  }
+
+  /** Aceitar subtarefa individual inline */
+  const handleInlineAcceptSingleSubtask = (item: string, index: number) => {
+    handleAcceptSubtasks([item])
+    const next = new Set(handledInlineSubtasks)
+    next.add(index)
+    setHandledInlineSubtasks(next)
+    if (pendingSubtasks?.suggestion.subtaskItems && next.size >= pendingSubtasks.suggestion.subtaskItems.length) {
+      chatPanelHandleRef.current?.dismissSuggestion(pendingSubtasks.msgId, pendingSubtasks.suggestionIndex)
+      setHandledInlineSubtasks(new Set())
+    }
+  }
+
+  /** Rejeitar subtarefa individual inline */
+  const handleInlineRejectSingleSubtask = (index: number) => {
+    const next = new Set(handledInlineSubtasks)
+    next.add(index)
+    setHandledInlineSubtasks(next)
+    if (pendingSubtasks?.suggestion.subtaskItems && next.size >= pendingSubtasks.suggestion.subtaskItems.length) {
+      chatPanelHandleRef.current?.dismissSuggestion(pendingSubtasks.msgId, pendingSubtasks.suggestionIndex)
+      setHandledInlineSubtasks(new Set())
+    }
   }
 
   /** Rejeitar subtarefas sugeridas inline */
@@ -445,24 +474,47 @@ export function CardDetailPage() {
             </form>
 
             {/* Preview inline das subtarefas sugeridas pela IA */}
-            {pendingSubtasks && pendingSubtasks.suggestion.subtaskItems?.length && (
+            {pendingSubtasks?.suggestion.subtaskItems?.length && (
               <div className="ai-inline-preview ai-inline-preview--subtasks">
                 <div className="ai-inline-preview-header">
                   <span className="ai-inline-preview-label">🤖 Subtarefas sugeridas pela IA</span>
                   <div className="ai-inline-preview-actions">
                     <button type="button" className="btn btn-primary btn-sm" onClick={handleInlineAcceptSubtasks}>
-                      ✓ Aceitar
+                      ✓ Aceitar todas ({(pendingSubtasks.suggestion.subtaskItems?.length ?? 0) - handledInlineSubtasks.size})
                     </button>
                     <button type="button" className="btn btn-ghost btn-sm" onClick={handleInlineRejectSubtasks}>
-                      ✕ Rejeitar
+                      ✕ Rejeitar todas
                     </button>
                   </div>
                 </div>
                 <ul className="ai-inline-subtask-list">
                   {pendingSubtasks.suggestion.subtaskItems.map((item, i) => (
-                    <li key={i} className="ai-inline-subtask-item">
-                      <span className="ai-inline-subtask-checkbox">☐</span>
-                      <span>{item}</span>
+                    <li
+                      key={i}
+                      className={`ai-inline-subtask-item${handledInlineSubtasks.has(i) ? ' ai-inline-subtask-item--handled' : ''}`}
+                    >
+                      <span className="ai-inline-subtask-number">{i + 1}.</span>
+                      <span className="ai-inline-subtask-text">{item}</span>
+                      {!handledInlineSubtasks.has(i) && (
+                        <span className="ai-inline-subtask-actions">
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-xs"
+                            onClick={() => handleInlineAcceptSingleSubtask(item, i)}
+                            title="Aceitar subtarefa"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-xs"
+                            onClick={() => handleInlineRejectSingleSubtask(i)}
+                            title="Rejeitar subtarefa"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>
