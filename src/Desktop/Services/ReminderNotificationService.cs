@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -11,14 +12,17 @@ namespace DevTaskManager.Desktop.Services;
 
 /// <summary>
 /// Polls the WebAPI for pending reminders and shows Windows toast notifications.
-/// Cada lembrete é notificado apenas uma vez por sessão para evitar spam.
+/// Lembretes pendentes reaparecem a cada ~1 minuto até o usuário tomar uma ação
+/// (concluir, cancelar ou adiar). Dispensar o toast no Windows NÃO impede que
+/// ele reapareça — somente ações via API alteram o status ou o horário.
 /// </summary>
 public sealed class ReminderNotificationService : IDisposable
 {
     private readonly HttpClient _http;
     private readonly Timer _timer;
-    private readonly TimeSpan _interval = TimeSpan.FromSeconds(30);
-    private readonly HashSet<string> _notifiedIds = [];
+    private readonly TimeSpan _pollInterval = TimeSpan.FromSeconds(30);
+    private readonly TimeSpan _renotifyInterval = TimeSpan.FromSeconds(60);
+    private readonly Dictionary<string, DateTime> _lastNotifiedAt = [];
     private bool _disposed;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -35,7 +39,7 @@ public sealed class ReminderNotificationService : IDisposable
         };
 
         // Aguarda 10s antes do primeiro poll — dá tempo para a API inicializar
-        _timer = new Timer(PollReminders, null, TimeSpan.FromSeconds(10), _interval);
+        _timer = new Timer(PollReminders, null, TimeSpan.FromSeconds(10), _pollInterval);
     }
 
     private static Uri GetApiBaseAddress()
@@ -64,15 +68,34 @@ public sealed class ReminderNotificationService : IDisposable
             if (result?.Content is null) return;
 
             var now = DateTime.UtcNow;
+
+            // Remove IDs de lembretes que não estão mais na lista (foram cancelados/concluídos)
+            var activeIds = new HashSet<string>();
+
             foreach (var reminder in result.Content)
             {
-                // Só notifica se: status Pending, hora já passou, e ainda não notificado nesta sessão
-                if (string.Equals(reminder.Status, "Pending", StringComparison.OrdinalIgnoreCase)
-                    && reminder.ScheduleAt <= now
-                    && _notifiedIds.Add(reminder.Id))
+                if (!string.Equals(reminder.Status, "Pending", StringComparison.OrdinalIgnoreCase)
+                    || reminder.ScheduleAt > now)
+                    continue;
+
+                activeIds.Add(reminder.Id);
+
+                // Re-notifica se nunca notificou OU se já passou o intervalo (1 min)
+                // Dispensar o toast no Windows não impede a re-notificação!
+                if (!_lastNotifiedAt.TryGetValue(reminder.Id, out var lastShown)
+                    || (now - lastShown) >= _renotifyInterval)
                 {
                     ShowToast(reminder);
+                    _lastNotifiedAt[reminder.Id] = now;
                 }
+            }
+
+            // Limpa tracking de lembretes que não são mais pendentes
+            // (usuário concluiu, cancelou ou adiou)
+            foreach (var id in _lastNotifiedAt.Keys.ToArray())
+            {
+                if (!activeIds.Contains(id))
+                    _lastNotifiedAt.Remove(id);
             }
         }
         catch
@@ -101,7 +124,7 @@ public sealed class ReminderNotificationService : IDisposable
         _timer.Change(Timeout.Infinite, Timeout.Infinite);
         _timer.Dispose();
         _http.Dispose();
-        _notifiedIds.Clear();
+        _lastNotifiedAt.Clear();
     }
 
     // Lightweight DTOs for deserialization
