@@ -77,8 +77,8 @@ export function HomePage() {
       </div>
 
       <div className="home-grid">
-        {/* AI Insights */}
-        <section className="card home-section">
+        {/* AI Insights — col 1, row 1 */}
+        <section className="card home-section home-section-insights">
           <h2 className="section-title">🤖 Insights do dia</h2>
           <div className="home-insights">
             {dashboard && dashboard.totalCards > 0 ? (
@@ -132,8 +132,8 @@ export function HomePage() {
           </div>
         </section>
 
-        {/* Recent cards */}
-        <section className="card home-section">
+        {/* Recent cards — col 3, sozinho */}
+        <section className="card home-section home-section-recentes">
           <h2 className="section-title">🕐 Cards recentes</h2>
           {dashboard?.recentCards?.length ? (
             <ul className="home-card-list">
@@ -154,9 +154,9 @@ export function HomePage() {
           )}
         </section>
 
-        {/* Overdue cards */}
+        {/* Overdue cards — col 1, row 2 */}
         {(dashboard?.overdueCards?.length ?? 0) > 0 && (
-          <section className="card home-section home-section-warning">
+          <section className="card home-section home-section-warning home-section-atrasados">
             <h2 className="section-title">⚠️ Cards atrasados</h2>
             <ul className="home-card-list">
               {dashboard!.overdueCards.map((card) => (
@@ -174,8 +174,8 @@ export function HomePage() {
           </section>
         )}
 
-        {/* Pending reminders */}
-        <section className="card home-section">
+        {/* Pending reminders — col 2, row 1 */}
+        <section className="card home-section home-section-lembretes">
           <h2 className="section-title">🔔 Lembretes pendentes</h2>
           {reminders.length > 0 ? (
             <ul className="home-card-list">
@@ -196,8 +196,8 @@ export function HomePage() {
           )}
         </section>
 
-        {/* Quick actions */}
-        <section className="card home-section">
+        {/* Quick actions — col 2, row 2 */}
+        <section className="card home-section home-section-acoes">
           <h2 className="section-title">⚡ Ações rápidas</h2>
           <div className="home-actions">
             <button
