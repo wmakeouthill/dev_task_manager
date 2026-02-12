@@ -61,6 +61,7 @@ builder.Services.AddScoped<IReminderRepository, ReminderRepository>();
 var geminiApiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY")
     ?? builder.Configuration["Gemini:ApiKey"];
 builder.Services.AddScoped<IAiProvider>(_ => new DevTaskManager.Infrastructure.Ai.GeminiAiProvider(geminiApiKey));
+builder.Services.AddSingleton<DevTaskManager.Infrastructure.Ai.AiProviderFactory>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateWorkspaceRequestValidator>();
 builder.Services.AddScoped<ListWorkspacesService>();
@@ -96,7 +97,9 @@ builder.Services.AddScoped<ListRemindersService>();
 builder.Services.AddScoped<SnoozeReminderService>();
 builder.Services.AddScoped<CancelReminderService>();
 builder.Services.AddScoped<AiActionService>();
+builder.Services.AddScoped<AiChatService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<ListPendingRemindersService>();
 #pragma warning disable CA1416
 builder.Services.AddSingleton<WindowsUserService>();
 #pragma warning restore CA1416

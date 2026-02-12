@@ -41,6 +41,43 @@ export interface AiActionResponse {
     durationMs: number
 }
 
+/** Mensagem no histórico de chat IA */
+export interface AiChatMessage {
+    role: 'user' | 'assistant'
+    content: string
+}
+
+/** Request para o chat IA do card */
+export interface AiChatRequest {
+    cardId: string
+    message: string
+    history?: AiChatMessage[]
+    referencedCardIds?: string[]
+}
+
+/** Sugestão estruturada da IA */
+export interface AiSuggestion {
+    type: 'description' | 'subtasks' | 'general'
+    content: string
+    subtaskItems?: string[]
+}
+
+/** Response do chat IA */
+export interface AiChatResponse {
+    reply: string
+    suggestions: AiSuggestion[]
+    provider: string
+    durationMs: number
+}
+
+/** Resultado de busca de cards */
+export interface CardSearchResult {
+    id: string
+    titulo: string
+    status: string
+    boardId: string
+}
+
 export interface CommentData {
     id: string
     cardId: string

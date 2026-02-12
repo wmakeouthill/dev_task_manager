@@ -19,6 +19,15 @@ public static class ReminderEndpoints
         .WithSummary("Lista lembretes com paginação")
         .Produces<PagedResponse<ReminderDto>>();
 
+        group.MapGet("/pending", async (ListPendingRemindersService service, CancellationToken ct) =>
+        {
+            var result = await service.ExecuteAsync(ct);
+            return Results.Ok(result);
+        })
+        .WithName("ListPendingReminders")
+        .WithSummary("Lista lembretes pendentes que precisam notificar agora")
+        .Produces<IReadOnlyList<ReminderDto>>();
+
         group.MapPost("/", async (CreateReminderRequest request, CreateReminderService service, CancellationToken ct) =>
         {
             var reminder = await service.ExecuteAsync(request, ct);

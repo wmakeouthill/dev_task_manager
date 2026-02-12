@@ -33,6 +33,20 @@ public class CardRepository(AppDbContext context) : ICardRepository
         return card;
     }
 
+    public async Task<IReadOnlyList<Card>> SearchAsync(string query, int limit = 10, CancellationToken ct = default)
+    {
+        var q = context.Cards.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(query))
+            q = q.Where(c => EF.Functions.Like(c.Titulo, $"%{query}%"));
+        return await q.OrderByDescending(c => c.CreatedAt).Take(limit).ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<Card>> ListAiEnabledAsync(CancellationToken ct = default)
+        => await context.Cards
+            .Where(c => c.AiEnabled)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync(ct);
+
     public async Task UpdateAsync(Card card, CancellationToken ct = default)
     {
         context.Cards.Update(card);

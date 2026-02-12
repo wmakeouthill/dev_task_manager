@@ -28,8 +28,8 @@ export function RemindersPage() {
     )
   }
 
-  const handleSnooze = (id: string) => {
-    const until = new Date(Date.now() + 30 * 60_000).toISOString() // +30 min
+  const handleSnooze = (id: string, minutes: number) => {
+    const until = new Date(Date.now() + minutes * 60_000).toISOString()
     snoozeReminder.mutate({ id, until })
   }
 
@@ -100,8 +100,17 @@ export function RemindersPage() {
                     </span>
                     {r.status === 'Pending' && (
                       <>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => handleSnooze(r.id)}>
-                          ⏰ +30m
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => handleSnooze(r.id, 5)}>
+                          ⏰ 5m
+                        </button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => handleSnooze(r.id, 10)}>
+                          ⏰ 10m
+                        </button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => handleSnooze(r.id, 20)}>
+                          ⏰ 20m
+                        </button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => handleSnooze(r.id, 30)}>
+                          ⏰ 30m
                         </button>
                         <button type="button" className="btn btn-ghost btn-sm btn-danger" onClick={() => cancelReminder.mutate(r.id)}>
                           ✕

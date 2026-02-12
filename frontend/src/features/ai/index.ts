@@ -1,3 +1,5 @@
 export { useAiAction } from './api/useAiAction'
+export { useAiChat } from './api/useAiChat'
+export { getAiHeaders } from './api/aiHeaders'
 export { InsightsPage } from './pages/InsightsPage'
 export { InsightsDropdown } from './components/InsightsDropdown'

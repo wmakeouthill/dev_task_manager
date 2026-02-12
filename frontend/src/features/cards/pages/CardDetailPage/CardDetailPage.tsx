@@ -6,9 +6,9 @@ import {
   useComments, useAddComment, useDeleteComment,
   useChecklist, useAddChecklistItem, useToggleChecklistItem, useDeleteChecklistItem,
 } from '@/features/cards/api/useCardExtras'
-import { useAiAction } from '@/features/ai'
 import { SubtaskModal } from '@/features/cards/components/SubtaskModal'
 import { BlockNoteDescriptionEditor } from '@/features/cards/components/BlockNoteDescriptionEditor'
+import { ChatPanel } from '@/features/cards/components/ChatPanel'
 import type { ChecklistItemData } from '@/shared/types'
 
 export function CardDetailPage() {
@@ -28,17 +28,12 @@ export function CardDetailPage() {
   const toggleChecklistItem = useToggleChecklistItem(cardId ?? null)
   const deleteChecklistItem = useDeleteChecklistItem(cardId ?? null)
 
-  const aiAction = useAiAction()
-
   const [editingTitle, setEditingTitle] = useState(false)
   const [editingDesc, setEditingDesc] = useState(false)
   const [titleInput, setTitleInput] = useState('')
   const [newComment, setNewComment] = useState('')
   const [newCheckItem, setNewCheckItem] = useState('')
-  const [chatMessages, setChatMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string }>>([])
-  const [chatInput, setChatInput] = useState('')
   const chatPanelRef = useRef<HTMLElement>(null)
-  const chatMessagesEndRef = useRef<HTMLDivElement>(null)
   const layoutRef = useRef<HTMLDivElement>(null)
 
   const CHAT_WIDTH_MIN = 280
@@ -64,7 +59,6 @@ export function CardDetailPage() {
   const [editingDueDate, setEditingDueDate] = useState(false)
   const [dueDateInput, setDueDateInput] = useState('')
   const commentTextareaRef = useRef<HTMLTextAreaElement>(null)
-  const chatTextareaRef = useRef<HTMLTextAreaElement>(null)
 
   const resizeTextarea = (el: HTMLTextAreaElement | null) => {
     if (!el) return
@@ -73,16 +67,8 @@ export function CardDetailPage() {
   }
 
   useEffect(() => {
-    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [chatMessages])
-
-  useEffect(() => {
     resizeTextarea(commentTextareaRef.current)
   }, [newComment])
-
-  useEffect(() => {
-    resizeTextarea(chatTextareaRef.current)
-  }, [chatInput])
 
   useEffect(() => {
     if (!isResizingChat) return
@@ -167,10 +153,6 @@ export function CardDetailPage() {
     )
   }
 
-  const handleAi = (action: string) => {
-    aiAction.mutate({ action, cardId: card.id })
-  }
-
   const handleToggleAiEnabled = () => {
     updateCard.mutate({ id: card.id, data: { aiEnabled: !card.aiEnabled } })
   }
@@ -179,6 +161,19 @@ export function CardDetailPage() {
     const newDate = dueDateInput ? new Date(dueDateInput).toISOString() : null
     updateCard.mutate({ id: card.id, data: { dueDate: newDate } })
     setEditingDueDate(false)
+  }
+
+  /** Aceita sugestão de descrição vinda do ChatPanel */
+  const handleAcceptDescription = (markdown: string) => {
+    updateCard.mutate({ id: card.id, data: { descricao: markdown } })
+  }
+
+  /** Aceita sugestão de subtarefas vinda do ChatPanel */
+  const handleAcceptSubtasks = (items: string[]) => {
+    const currentLen = checklistItems.length
+    items.forEach((texto, i) => {
+      addChecklistItem.mutate({ texto, ordem: currentLen + i })
+    })
   }
 
   return (
@@ -466,82 +461,11 @@ export function CardDetailPage() {
 
         {/* Chat à direita - preenche a altura */}
         <aside ref={chatPanelRef} className="card-detail-ai card-detail-ai-chat">
-          <div className="card-detail-ai-chat-header">
-            <h2 className="section-title">🤖 Chat IA</h2>
-            <p className="card-detail-ai-chat-hint">Converse sobre o card, peça ajuda com descrição e subtarefas.</p>
-          </div>
-          <div className="card-detail-ai-chat-messages">
-            {chatMessages.length === 0 && (
-              <>
-                <div className="card-detail-ai-quick-actions">
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleAi('summarize')} disabled={aiAction.isPending}>
-                    📝 Resumir
-                  </button>
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleAi('subtasks')} disabled={aiAction.isPending}>
-                    📋 Subtarefas
-                  </button>
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleAi('clarify')} disabled={aiAction.isPending}>
-                    ❓ Esclarecer
-                  </button>
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleAi('risk')} disabled={aiAction.isPending}>
-                    ⚠️ Riscos
-                  </button>
-                </div>
-                <div className="card-detail-ai-chat-welcome">
-                  <p>Ou digite abaixo para conversar. (Backend em desenvolvimento.)</p>
-                </div>
-              </>
-            )}
-            {chatMessages.map((msg) => (
-              <div key={msg.id} className={`card-detail-ai-chat-msg card-detail-ai-chat-msg--${msg.role}`}>
-                <span className="card-detail-ai-chat-msg-role">{msg.role === 'user' ? 'Você' : 'IA'}</span>
-                <div className="card-detail-ai-chat-msg-content">
-                  {msg.role === 'assistant' ? (
-                    <MarkdownWithCode>{msg.content}</MarkdownWithCode>
-                  ) : (
-                    <p>{msg.content}</p>
-                  )}
-                </div>
-              </div>
-            ))}
-            <div ref={chatMessagesEndRef} />
-          </div>
-          <form
-            className="card-detail-ai-chat-form"
-            onSubmit={(e) => {
-              e.preventDefault()
-              const text = chatInput.trim()
-              if (!text) return
-              setChatMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'user', content: text }])
-              setChatInput('')
-              resizeTextarea(chatTextareaRef.current)
-            }}
-          >
-            <div className="chat-input-wrap">
-              <textarea
-                ref={chatTextareaRef}
-                className="input card-detail-ai-chat-input"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.ctrlKey) {
-                    e.preventDefault()
-                    if (chatInput.trim()) {
-                      setChatMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'user', content: chatInput.trim() }])
-                      setChatInput('')
-                      resizeTextarea(chatTextareaRef.current)
-                    }
-                  }
-                }}
-                placeholder="Mensagem para a IA…"
-                rows={1}
-                aria-label="Mensagem do chat"
-              />
-            </div>
-            <button type="submit" className="btn btn-primary card-detail-ai-chat-send" disabled={!chatInput.trim()}>
-              Enviar
-            </button>
-          </form>
+          <ChatPanel
+            cardId={card.id}
+            onAcceptDescription={handleAcceptDescription}
+            onAcceptSubtasks={handleAcceptSubtasks}
+          />
         </aside>
       </div>
 

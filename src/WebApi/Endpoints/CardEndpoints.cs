@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using DevTaskManager.Application.DTOs;
 using DevTaskManager.Application.Services;
 using DevTaskManager.Domain.Entities;
+using DevTaskManager.Domain.Interfaces;
 
 namespace DevTaskManager.WebApi.Endpoints;
 
@@ -26,6 +27,16 @@ public static class CardEndpoints
 
         var byId = app.MapGroup("/cards")
             .WithTags("Cards");
+
+        byId.MapGet("/search", async (string? q, int? limit, ICardRepository cardRepo, CancellationToken ct) =>
+        {
+            var cards = await cardRepo.SearchAsync(q ?? "", limit ?? 10, ct);
+            var results = cards.Select(c => new CardSearchResult(c.Id, c.Titulo, c.Status.ToString(), c.BoardId)).ToList();
+            return Results.Ok(results);
+        })
+        .WithName("SearchCards")
+        .WithSummary("Busca cards por texto no título")
+        .Produces<IReadOnlyList<CardSearchResult>>();
 
         byId.MapGet("/{id:guid}", GetCard)
             .WithName("GetCard")

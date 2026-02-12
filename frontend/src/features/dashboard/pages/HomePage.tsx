@@ -1,12 +1,17 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDashboard, useCurrentUser } from '@/features/dashboard'
 import { useReminders } from '@/features/reminders'
+import { useAiAction } from '@/features/ai'
+import { MarkdownWithCode } from '@/shared/components/MarkdownWithCode'
 
 export function HomePage() {
   const navigate = useNavigate()
   const { data: dashboard, isLoading } = useDashboard()
   const { data: user } = useCurrentUser()
   const { data: remindersData } = useReminders()
+  const aiAction = useAiAction()
+  const [dailyInsight, setDailyInsight] = useState<string | null>(null)
 
   const reminders = remindersData?.content?.filter((r) => r.status === 'Pending') ?? []
   const greeting = getGreeting()
@@ -215,6 +220,35 @@ export function HomePage() {
               🔔 Lembretes
             </button>
           </div>
+        </section>
+
+        {/* AI Daily Insight */}
+        <section className="card home-section home-section-ai-daily">
+          <h2 className="section-title">🤖 Insight do Dia (IA)</h2>
+          {dailyInsight ? (
+            <div className="ai-result">
+              <MarkdownWithCode>{dailyInsight}</MarkdownWithCode>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '12px 0' }}>
+              <p className="loading-text" style={{ marginBottom: 12 }}>
+                Gere um resumo inteligente do seu dia com base nos cards ativos.
+              </p>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={aiAction.isPending}
+                onClick={() => {
+                  aiAction.mutate(
+                    { action: 'daily-insights', cardId: 'global' },
+                    { onSuccess: (res) => setDailyInsight(res.content) }
+                  )
+                }}
+              >
+                {aiAction.isPending ? '⏳ Gerando…' : '✨ Gerar insight do dia'}
+              </button>
+            </div>
+          )}
         </section>
       </div>
     </div>
