@@ -1630,6 +1630,13 @@ select:focus-visible {
   gap: 2px;
 }
 
+.checklist-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
 .checklist-item {
   display: flex;
   align-items: center;
@@ -1637,6 +1644,8 @@ select:focus-visible {
   padding: 6px 8px;
   border-radius: var(--radius-sm);
   transition: background 0.15s;
+  width: 100%;
+  min-width: 0;
 }
 
 .checklist-item:hover {
@@ -1705,46 +1714,74 @@ select:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-bottom: 14px;
+  margin: 0 0 14px 0;
+  padding: 0;
+  list-style: none;
+  width: 100%;
+  min-width: 0;
 }
 
 .comment-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 4px;
+  width: 100%;
+  min-width: 0;
   background: var(--bg-raised);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 12px;
-}
-
-.comment-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
+  padding: 10px 12px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
 }
 
 .comment-author {
   font-weight: 600;
-  font-size: 0.8125rem;
   color: var(--text-primary);
+  flex-shrink: 0;
 }
 
 .comment-date {
-  font-size: 0.6875rem;
   color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.comment-sep {
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .comment-body {
-  font-size: 0.8125rem;
   color: var(--text-secondary);
-  line-height: 1.5;
+  flex: 1 1 0;
+  min-width: 0;
+  word-wrap: break-word;
 }
 
 .comment-body p {
-  margin: 0 0 6px;
+  display: inline;
+  margin: 0;
 }
 
-.comment-body p:last-child {
-  margin-bottom: 0;
+.comment-body p::after {
+  content: ' ';
+}
+
+.comment-body p:last-child::after {
+  content: '';
+}
+
+.comment-body pre,
+.comment-body ul,
+.comment-body ol {
+  display: block;
+  margin: 4px 0 0;
+}
+
+.comment-delete-btn {
+  flex-shrink: 0;
+  margin-left: 4px;
 }
 
 .comment-delete {
@@ -1764,13 +1801,38 @@ select:focus-visible {
 
 .comment-form {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
-.comment-form textarea {
-  min-height: 60px;
-  resize: vertical;
+.comment-form .comment-input-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.comment-form .comment-input {
+  width: 100%;
+  height: 2.25rem;
+  min-height: 2.25rem;
+  max-height: 200px;
+  resize: none;
+  overflow-y: auto;
+  padding: 0.375rem 12px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+
+.comment-form .btn-primary {
+  height: 2.25rem;
+  padding: 0 14px;
+  font-size: 0.8125rem;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 /* ===== AI Panel (Card Detail sidebar) ===== */
@@ -1901,20 +1963,37 @@ select:focus-visible {
   padding: 10px 14px;
   border-top: 1px solid var(--border-subtle);
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-detail-ai-chat-form .chat-input-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
 }
 
 .card-detail-ai-chat-input {
   width: 100%;
-  min-height: 60px;
+  height: 2.25rem;
+  min-height: 2.25rem;
+  max-height: 200px;
   resize: none;
+  overflow-y: auto;
+  padding: 0.375rem 12px;
   font-size: 0.8125rem;
-  padding: 10px 12px;
+  line-height: 1.4;
+  box-sizing: border-box;
 }
 
 .card-detail-ai-chat-send {
-  align-self: flex-end;
+  flex-shrink: 0;
+  height: 2.25rem;
+  padding: 0 14px;
+  font-size: 0.8125rem;
+  box-sizing: border-box;
 }
 
 .card-detail-ai h3 {
@@ -2685,6 +2764,8 @@ select:focus-visible {
 /* ===== Checklist text as button ===== */
 .checklist-text-btn {
   flex: 1;
+  min-width: 0;
+  text-align: left;
   background: none;
   border: none;
   padding: 2px 0;

@@ -53,7 +53,15 @@ export function CardDetailPage() {
   const [slashCursorPos, setSlashCursorPos] = useState(0)
   const [slashPosition, setSlashPosition] = useState<{ top: number; left: number } | null>(null)
   const descTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const commentTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const chatTextareaRef = useRef<HTMLTextAreaElement>(null)
   const pendingCursorRef = useRef<number | null>(null)
+
+  const resizeTextarea = (el: HTMLTextAreaElement | null) => {
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.max(36, Math.min(el.scrollHeight, 200))}px`
+  }
 
   const filteredSlashCommands = useMemo(
     () => filterSlashCommands(SLASH_COMMANDS, slashFilter),
@@ -65,6 +73,14 @@ export function CardDetailPage() {
   }, [chatMessages])
 
   useEffect(() => {
+    resizeTextarea(commentTextareaRef.current)
+  }, [newComment])
+
+  useEffect(() => {
+    resizeTextarea(chatTextareaRef.current)
+  }, [chatInput])
+
+  useEffect(() => {
     const ta = descTextareaRef.current
     if (ta && pendingCursorRef.current !== null) {
       const pos = pendingCursorRef.current
@@ -73,6 +89,7 @@ export function CardDetailPage() {
       pendingCursorRef.current = null
     }
   }, [descInput])
+
 
   useEffect(() => {
     if (!slashOpen || !descTextareaRef.current) {
@@ -456,13 +473,26 @@ export function CardDetailPage() {
           <section className="card-detail-section">
             <h2 className="section-title">💬 Comentários ({comments.length})</h2>
             <form onSubmit={handleAddComment} className="comment-form">
-              <textarea
-                className="input comment-input"
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Escreva um comentário..."
-                rows={3}
-              />
+              <div className="comment-input-wrap">
+                <textarea
+                  ref={commentTextareaRef}
+                  className="input comment-input"
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.ctrlKey) {
+                      e.preventDefault()
+                      if (newComment.trim()) {
+                        addComment.mutate(newComment.trim(), {
+                          onSuccess: () => setNewComment(''),
+                        })
+                      }
+                    }
+                  }}
+                  placeholder="Escreva um comentário..."
+                  rows={1}
+                />
+              </div>
               <button type="submit" className="btn btn-primary" disabled={addComment.isPending}>
                 {addComment.isPending ? 'Enviando…' : 'Comentar'}
               </button>
@@ -470,23 +500,22 @@ export function CardDetailPage() {
             <ul className="comment-list">
               {comments.map((c) => (
                 <li key={c.id} className="comment-item">
-                  <div className="comment-header">
-                    <span className="comment-author">{c.autor}</span>
-                    <span className="comment-date">
-                      {new Date(c.createdAt).toLocaleString('pt-BR')}
-                    </span>
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-icon btn-sm"
-                      onClick={() => deleteComment.mutate(c.id)}
-                      aria-label="Excluir comentário"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <div className="comment-body">
+                  <span className="comment-author">{c.autor}</span>
+                  <span className="comment-date">
+                    {new Date(c.createdAt).toLocaleString('pt-BR')}
+                  </span>
+                  <span className="comment-sep"> : </span>
+                  <span className="comment-body">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{c.texto}</ReactMarkdown>
-                  </div>
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-icon btn-sm comment-delete-btn"
+                    onClick={() => deleteComment.mutate(c.id)}
+                    aria-label="Excluir comentário"
+                  >
+                    ×
+                  </button>
                 </li>
               ))}
             </ul>
@@ -544,17 +573,30 @@ export function CardDetailPage() {
               if (!text) return
               setChatMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'user', content: text }])
               setChatInput('')
-              // Backend: enviar mensagem e adicionar resposta do assistente quando existir
+              resizeTextarea(chatTextareaRef.current)
             }}
           >
-            <textarea
-              className="input card-detail-ai-chat-input"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Mensagem para a IA…"
-              rows={2}
-              aria-label="Mensagem do chat"
-            />
+            <div className="chat-input-wrap">
+              <textarea
+                ref={chatTextareaRef}
+                className="input card-detail-ai-chat-input"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.ctrlKey) {
+                    e.preventDefault()
+                    if (chatInput.trim()) {
+                      setChatMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'user', content: chatInput.trim() }])
+                      setChatInput('')
+                      resizeTextarea(chatTextareaRef.current)
+                    }
+                  }
+                }}
+                placeholder="Mensagem para a IA…"
+                rows={1}
+                aria-label="Mensagem do chat"
+              />
+            </div>
             <button type="submit" className="btn btn-primary card-detail-ai-chat-send" disabled={!chatInput.trim()}>
               Enviar
             </button>
