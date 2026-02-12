@@ -11,7 +11,7 @@ namespace DevTaskManager.Infrastructure.Ai;
 /// </summary>
 public class GeminiAiProvider : IAiProvider
 {
-    private readonly Client _client;
+    private readonly Client? _client;
     public const string DefaultModel = "gemini-2.0-flash";
 
     public string ProviderName => "gemini";
@@ -21,15 +21,25 @@ public class GeminiAiProvider : IAiProvider
         var key = apiKey?.Trim();
         if (string.IsNullOrEmpty(key))
             key = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
-        if (string.IsNullOrEmpty(key))
-            throw new InvalidOperationException(
-                "Gemini API key is required. Set 'Gemini:ApiKey' in appsettings or the GEMINI_API_KEY environment variable.");
-        _client = new Client(apiKey: key);
+
+        // Não lança exceção se a chave não estiver configurada — permite que o
+        // DI crie a instância sem erro. ExecuteAsync retornará mensagem amigável.
+        if (!string.IsNullOrEmpty(key))
+            _client = new Client(apiKey: key);
     }
 
     public async Task<AiResponse> ExecuteAsync(AiRequest request, CancellationToken ct = default)
     {
         var sw = Stopwatch.StartNew();
+
+        if (_client is null)
+        {
+            return new AiResponse(
+                "Chave de API do Gemini não configurada. Vá em Configurações e informe sua API key.",
+                ProviderName,
+                sw.Elapsed);
+        }
+
         var prompt = BuildPrompt(request);
 
         try
