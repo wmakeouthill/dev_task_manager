@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:DevTaskManager.Desktop"
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
-        Title="Dev Task Manager" Height="720" Width="1200">
+        Title="Dev Task Manager" Height="720" Width="1200"
+        Icon="pack://application:,,,/icon.ico">
     <Grid>
         <wv2:WebView2 x:Name="AppWebView" />
     </Grid>

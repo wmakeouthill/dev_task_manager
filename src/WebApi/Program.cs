@@ -44,8 +44,23 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Data Source=devtaskmanager.db";
+// Em Production: usa AppData para persistir dados entre reinstalações/upgrades
+var connFromConfig = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = connFromConfig;
+if (string.IsNullOrEmpty(connectionString))
+{
+    if (builder.Environment.IsProduction())
+    {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var dbDir = Path.Combine(appData, "DevTaskManager");
+        Directory.CreateDirectory(dbDir);
+        connectionString = $"Data Source={Path.Combine(dbDir, "devtaskmanager.db")}";
+    }
+    else
+    {
+        connectionString = "Data Source=devtaskmanager.db";
+    }
+}
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlite(connectionString);

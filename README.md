@@ -90,6 +90,20 @@ A pasta `publish/` conterá:
 
 **Uso:** copie a pasta `publish/` inteira para qualquer local (pen drive, outra máquina) e execute `DevTaskManager.Desktop.exe`.
 
+**Dados:** a versão publicada grava o banco em `%LocalAppData%\DevTaskManager\` — os dados não são perdidos ao recompilar ou reinstalar nova versão.
+
+### Pasta portátil + instalador
+
+Para gerar **ambos** (pasta `publish/` e instalador `.exe`):
+
+```powershell
+.\publish-installer.ps1
+```
+
+Requer **Inno Setup 6** instalado ([download](https://jrsoftware.org/isinfo.php)). Saída:
+- `publish/` – pasta portátil
+- `dist/DevTaskManager-Setup-1.0.0.exe` – instalador
+
 ## Testes
 
 - Backend: `dotnet test`
