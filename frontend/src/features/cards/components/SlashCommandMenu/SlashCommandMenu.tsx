@@ -18,7 +18,7 @@ export function SlashCommandMenu({
   selectedIndex,
   onSelectIndex,
   onSelect,
-  onClose,
+  onClose: _onClose,
   position,
 }: SlashCommandMenuProps) {
   const listRef = useRef<HTMLUListElement>(null)

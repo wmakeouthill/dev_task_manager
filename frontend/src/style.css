@@ -64,6 +64,8 @@ body {
 .app-layout {
   display: flex;
   min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .app-sidebar {
@@ -110,6 +112,8 @@ body {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .app-header {
@@ -135,6 +139,14 @@ body {
   min-height: 0;
   padding: 24px;
   overflow: auto;
+}
+
+.app-main:has(.card-detail-page) {
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* ===== Typography ===== */
@@ -745,6 +757,10 @@ select:focus-visible {
 .sidebar-avatar {
   width: 34px;
   height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  max-width: 34px;
+  max-height: 34px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
@@ -1041,36 +1057,106 @@ select:focus-visible {
 
 /* ===== Card Detail Page ===== */
 .card-detail-page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 24px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
   animation: fadeIn 0.25s ease;
+  box-sizing: border-box;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
-.card-detail-back {
+/* Força a página do card a ignorar .page e usar toda a largura (elimina espaço vazio à direita) */
+.page.card-detail-page {
+  max-width: none !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.card-detail-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8125rem;
+  padding: 8px 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--text-secondary);
-  text-decoration: none;
-  margin-bottom: 16px;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  transition: background 0.15s;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  font-family: inherit;
 }
 
-.card-detail-back:hover {
+.card-detail-back-btn:hover {
   background: var(--bg-hover);
+  border-color: var(--border-strong);
   color: var(--text-primary);
+}
+
+.card-detail-back-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.card-detail-ai-header-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  font-family: inherit;
+}
+
+.card-detail-ai-header-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.card-detail-ai-header-btn.is-open {
+  background: rgba(35, 131, 226, 0.08);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.card-detail-ai-header-btn.is-open:hover {
+  background: rgba(35, 131, 226, 0.14);
+}
+
+/* Coluna esquerda: header fixo + conteúdo fixo (título/meta) + área do card com scroll */
+.card-detail-left {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: 10px 16px 0 24px;
 }
 
 .card-detail-header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .card-detail-title {
@@ -1080,7 +1166,8 @@ select:focus-visible {
   border: none;
   background: transparent;
   width: 100%;
-  padding: 4px 0;
+  padding: 0;
+  margin: 0;
   outline: none;
   font-family: inherit;
   line-height: 1.3;
@@ -1088,6 +1175,38 @@ select:focus-visible {
 
 .card-detail-title:focus {
   border-bottom: 2px solid var(--accent);
+}
+
+.card-detail-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  padding: 10px 14px;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin: 0;
+}
+
+.card-detail-meta .status-badge {
+  flex-shrink: 0;
+}
+
+.card-detail-meta .meta-item {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.card-detail-meta .meta-item-clickable {
+  padding: 4px 10px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.card-detail-meta .meta-item-clickable:hover {
+  color: var(--text-primary);
 }
 
 .card-detail-actions {
@@ -1099,21 +1218,146 @@ select:focus-visible {
 
 .card-detail-layout {
   display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 24px;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-rows: 1fr;
+  gap: 0;
+  align-items: stretch;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
-@media (max-width: 840px) {
+.card-detail-layout > * {
+  min-height: 0;
+}
+
+.card-detail-page .card-detail-layout {
+  width: 100%;
+}
+
+@media (max-width: 960px) {
   .card-detail-layout {
     grid-template-columns: 1fr;
   }
 }
 
+/* Bloco fixo: título + meta na mesma linha — altura responsiva, não rola */
+.card-detail-main-top {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* Título + meta na mesma linha, inline, alinhados ao centro */
+.card-detail-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  min-width: 0;
+  width: 100%;
+}
+
+/* Título inline para ficar na mesma linha que o meta */
+.card-detail-title-row .card-detail-title-wrap {
+  flex: 0 0 auto;
+  display: inline-block;
+  min-width: 0;
+}
+
+.card-detail-title-row .card-detail-title-wrap .card-detail-title,
+.card-detail-title-row .card-detail-title-wrap .card-detail-title-input,
+.card-detail-title-row .card-detail-title.card-detail-title-wrap {
+  width: auto !important;
+  max-width: 100%;
+  min-width: 60px;
+  display: inline-block;
+}
+
+.card-detail-title-row .card-detail-meta {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 4px 10px;
+  gap: 8px 10px;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+
+.card-detail-title-row .card-detail-meta .meta-item,
+.card-detail-title-row .card-detail-meta .meta-item-clickable,
+.card-detail-title-row .card-detail-meta .status-badge,
+.card-detail-title-row .card-detail-meta .card-detail-ai-toggle--inline .btn {
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+
+.card-detail-title-row .card-detail-meta .card-detail-ai-toggle--inline .btn {
+  padding: 3px 8px;
+}
+
+/* Toggle Insights IA dentro do meta — alinhado aos outros itens */
+.card-detail-ai-toggle--inline {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.card-detail-meta .card-detail-ai-toggle--inline {
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+
+.card-detail-main-top .card-detail-section {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Área que rola: apenas descrição, subtarefas e comentários — estende até o fim da coluna */
+.card-detail-main-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 8px 16px 0;
+}
+
+.card-detail-main-scroll .card-detail-section {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Fallback quando não usa scroll separado (layout antigo) */
 .card-detail-main {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+  min-width: 0;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.card-detail-main .card-detail-section {
+  width: 100%;
+  min-width: 0;
 }
 
 /* Card description / Markdown area */
@@ -1128,6 +1372,11 @@ select:focus-visible {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin: 0 0 8px;
+}
+
+.card-detail-section .section-title {
+  margin: 0 0 14px;
+  color: var(--text-secondary);
 }
 
 .card-detail-markdown {
@@ -1351,6 +1600,11 @@ select:focus-visible {
   margin: 0 0 10px;
 }
 
+.checklist-count {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
 .checklist-progress {
   height: 5px;
   background: var(--bg-active);
@@ -1527,6 +1781,140 @@ select:focus-visible {
   padding: 20px;
   position: sticky;
   top: 20px;
+}
+
+/* Painel IA como chat: preenche toda a altura da coluna, não rola com a página */
+.card-detail-ai-chat {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+  position: relative;
+  top: 0;
+  border-left: 1px solid var(--border-subtle);
+  border-radius: 0;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg-raised);
+}
+
+.card-detail-ai-chat-header {
+  flex-shrink: 0;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.card-detail-ai-chat-header .section-title {
+  margin: 0 0 4px 0;
+}
+
+.card-detail-ai-chat-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.card-detail-ai-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.card-detail-ai-quick-actions .btn {
+  font-size: 0.75rem;
+  padding: 6px 10px;
+}
+
+.card-detail-ai-chat-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-detail-ai-chat-welcome {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.card-detail-ai-chat-welcome p {
+  margin: 0 0 8px;
+}
+
+.card-detail-ai-chat-welcome ul {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+
+.card-detail-ai-chat-welcome li {
+  margin: 0 0 4px;
+}
+
+.card-detail-ai-chat-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-detail-ai-chat-msg-role {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.card-detail-ai-chat-msg--user .card-detail-ai-chat-msg-content {
+  background: var(--accent-muted);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  margin-left: 0;
+}
+
+.card-detail-ai-chat-msg--assistant .card-detail-ai-chat-msg-content {
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-subtle);
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.card-detail-ai-chat-msg-content p {
+  margin: 0 0 6px;
+}
+
+.card-detail-ai-chat-msg-content p:last-child {
+  margin-bottom: 0;
+}
+
+.card-detail-ai-chat-form {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card-detail-ai-chat-input {
+  width: 100%;
+  min-height: 60px;
+  resize: none;
+  font-size: 0.8125rem;
+  padding: 10px 12px;
+}
+
+.card-detail-ai-chat-send {
+  align-self: flex-end;
 }
 
 .card-detail-ai h3 {
@@ -2245,10 +2633,25 @@ select:focus-visible {
 /* ===== Card Detail AI Toggle ===== */
 .card-detail-ai-toggle {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-  padding: 8px 0;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.card-detail-ai-toggle .btn {
+  align-self: flex-start;
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+}
+
+.card-detail-ai-toggle .settings-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 .btn-ai-active {
@@ -2324,5 +2727,6 @@ select:focus-visible {
   background: var(--bg-raised);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 18px 20px;
+  width: 100%;
 }

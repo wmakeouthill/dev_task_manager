@@ -39,8 +39,10 @@ export function CardDetailPage() {
   const [descInput, setDescInput] = useState('')
   const [newComment, setNewComment] = useState('')
   const [newCheckItem, setNewCheckItem] = useState('')
-  const [aiResult, setAiResult] = useState<string | null>(null)
-  const [showAi, setShowAi] = useState(false)
+  const [chatMessages, setChatMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string }>>([])
+  const [chatInput, setChatInput] = useState('')
+  const chatPanelRef = useRef<HTMLElement>(null)
+  const chatMessagesEndRef = useRef<HTMLDivElement>(null)
   const [selectedSubtask, setSelectedSubtask] = useState<ChecklistItemData | null>(null)
   const [editingDueDate, setEditingDueDate] = useState(false)
   const [dueDateInput, setDueDateInput] = useState('')
@@ -57,6 +59,10 @@ export function CardDetailPage() {
     () => filterSlashCommands(SLASH_COMMANDS, slashFilter),
     [slashFilter]
   )
+
+  useEffect(() => {
+    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages])
 
   useEffect(() => {
     const ta = descTextareaRef.current
@@ -200,10 +206,7 @@ export function CardDetailPage() {
   }
 
   const handleAi = (action: string) => {
-    aiAction.mutate(
-      { action, cardId: card.id },
-      { onSuccess: (res) => setAiResult(res.content) }
-    )
+    aiAction.mutate({ action, cardId: card.id })
   }
 
   const handleToggleAiEnabled = () => {
@@ -217,115 +220,118 @@ export function CardDetailPage() {
   }
 
   return (
-    <div className="page card-detail-page">
-      {/* Header */}
-      <header className="card-detail-header">
-        <button type="button" className="btn btn-ghost" onClick={() => navigate(-1)}>
-          ← Voltar
-        </button>
-        <div className="card-detail-actions">
-          <select
-            className="select"
-            value={card.status}
-            onChange={(e) => handleStatusChange(e.target.value)}
-            aria-label="Status do card"
-          >
-            <option value="Todo">📋 To Do</option>
-            <option value="InProgress">🔧 In Progress</option>
-            <option value="Done">✅ Done</option>
-          </select>
-          <button type="button" className="btn btn-ghost" onClick={() => setShowAi(!showAi)}>
-            🤖 IA
-          </button>
-          <button type="button" className="btn btn-ghost btn-danger" onClick={handleDelete}>
-            🗑️
-          </button>
-        </div>
-      </header>
-
+    <div className="card-detail-page">
       <div className="card-detail-layout">
-        {/* Main content */}
-        <div className="card-detail-main">
-          {/* Title */}
-          {editingTitle ? (
-            <div className="card-detail-title-edit">
-              <input
-                className="input card-detail-title-input"
-                value={titleInput}
-                onChange={(e) => setTitleInput(e.target.value)}
-                onBlur={handleSaveTitle}
-                onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle()}
-                autoFocus
-              />
-            </div>
-          ) : (
-            <h1
-              className="card-detail-title"
-              onClick={() => {
-                setTitleInput(card.titulo)
-                setEditingTitle(true)
-              }}
-              role="button"
-              tabIndex={0}
-            >
-              {card.titulo}
-            </h1>
-          )}
-
-          {/* Meta */}
-          <div className="card-detail-meta">
-            <span className={`status-badge status-${card.status.toLowerCase()}`}>
-              {card.status}
-            </span>
-            {editingDueDate ? (
-              <span className="meta-item" style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                <input
-                  className="input"
-                  type="date"
-                  value={dueDateInput}
-                  onChange={(e) => setDueDateInput(e.target.value)}
-                  autoFocus
-                  style={{ width: 'auto', padding: '4px 8px', fontSize: '0.8125rem' }}
-                />
-                <button type="button" className="btn btn-primary btn-sm" onClick={handleSaveDueDate}>✓</button>
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditingDueDate(false)}>✕</button>
-              </span>
-            ) : (
-              <button
-                type="button"
-                className="meta-item meta-item-clickable"
-                onClick={() => {
-                  setDueDateInput(card.dueDate ? card.dueDate.split('T')[0] : '')
-                  setEditingDueDate(true)
-                }}
-              >
-                📅 {card.dueDate
-                  ? new Date(card.dueDate).toLocaleDateString('pt-BR')
-                  : 'Definir prazo'}
-              </button>
-            )}
-            <span className="meta-item">
-              Criado em {new Date(card.createdAt).toLocaleDateString('pt-BR')}
-            </span>
-          </div>
-
-          {/* AI Toggle */}
-          <div className="card-detail-ai-toggle">
+        {/* Coluna esquerda: header fixo + área do card com scroll */}
+        <div className="card-detail-left">
+          <header className="card-detail-header">
             <button
               type="button"
-              className={`btn btn-sm ${card.aiEnabled ? 'btn-ai-active' : 'btn-ghost'}`}
-              onClick={handleToggleAiEnabled}
-              title={card.aiEnabled ? 'IA gera insights deste card' : 'IA não gera insights deste card'}
+              className="card-detail-back-btn"
+              onClick={() => navigate(-1)}
+              aria-label="Voltar"
             >
-              🤖 {card.aiEnabled ? 'Insights IA: Ativado' : 'Insights IA: Desativado'}
+              <span className="card-detail-back-icon" aria-hidden>←</span>
+              Voltar
             </button>
-            <span className="settings-hint" style={{ margin: 0 }}>
-              {card.aiEnabled
-                ? 'Dados deste card serão enviados para gerar insights'
-                : 'Este card não será usado para gerar insights (economiza tokens)'}
-            </span>
+            <select
+              className="select"
+              value={card.status}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              aria-label="Status do card"
+            >
+              <option value="Todo">📋 To Do</option>
+              <option value="InProgress">🔧 In Progress</option>
+              <option value="Done">✅ Done</option>
+            </select>
+            <button type="button" className="btn btn-ghost btn-danger" onClick={handleDelete}>
+              🗑️
+            </button>
+          </header>
+
+          {/* Bloco fixo: mesma linha = título (esq) | meta + toggle IA (dir) */}
+          <div className="card-detail-main-top">
+            <div className="card-detail-title-row">
+              {/* Title */}
+              {editingTitle ? (
+                <div className="card-detail-title-edit card-detail-title-wrap">
+                  <input
+                    className="input card-detail-title-input"
+                    value={titleInput}
+                    onChange={(e) => setTitleInput(e.target.value)}
+                    onBlur={handleSaveTitle}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle()}
+                    autoFocus
+                  />
+                </div>
+              ) : (
+                <h1
+                  className="card-detail-title card-detail-title-wrap"
+                  onClick={() => {
+                    setTitleInput(card.titulo)
+                    setEditingTitle(true)
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  {card.titulo}
+                </h1>
+              )}
+
+              {/* Meta (inclui Insights IA) à direita do título */}
+              <div className="card-detail-meta">
+                <span className={`status-badge status-${card.status.toLowerCase()}`}>
+                  {card.status}
+                </span>
+                {editingDueDate ? (
+                  <span className="meta-item" style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                    <input
+                      className="input"
+                      type="date"
+                      value={dueDateInput}
+                      onChange={(e) => setDueDateInput(e.target.value)}
+                      autoFocus
+                      style={{ width: 'auto', padding: '4px 8px', fontSize: '0.8125rem' }}
+                    />
+                    <button type="button" className="btn btn-primary btn-sm" onClick={handleSaveDueDate}>✓</button>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditingDueDate(false)}>✕</button>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="meta-item meta-item-clickable"
+                    onClick={() => {
+                      setDueDateInput(card.dueDate ? card.dueDate.split('T')[0] : '')
+                      setEditingDueDate(true)
+                    }}
+                  >
+                    📅 {card.dueDate
+                      ? new Date(card.dueDate).toLocaleDateString('pt-BR')
+                      : 'Definir prazo'}
+                  </button>
+                )}
+                <span className="meta-item">
+                  Criado em {new Date(card.createdAt).toLocaleDateString('pt-BR')}
+                </span>
+                <span className="card-detail-ai-toggle card-detail-ai-toggle--inline">
+                  <button
+                    type="button"
+                    className={`btn btn-sm ${card.aiEnabled ? 'btn-ai-active' : 'btn-ghost'}`}
+                    onClick={handleToggleAiEnabled}
+                    title={card.aiEnabled
+                      ? 'Dados deste card serão enviados para gerar insights'
+                      : 'Este card não será usado para gerar insights (economiza tokens)'}
+                    aria-label={card.aiEnabled ? 'Insights IA ativado (clique para desativar)' : 'Insights IA desativado (clique para ativar)'}
+                  >
+                    🤖 Insights IA: {card.aiEnabled ? 'On' : 'Off'}
+                  </button>
+                </span>
+              </div>
+            </div>
           </div>
 
+          {/* Área com scroll: descrição, subtarefas, comentários */}
+          <div className="card-detail-main-scroll">
           {/* Description (Markdown) */}
           <section className="card-detail-section">
             <h2 className="section-title">📝 Descrição</h2>
@@ -387,17 +393,17 @@ export function CardDetailPage() {
             <h2 className="section-title">
               ☑️ Subtarefas
               {checklistItems.length > 0 && (
-                <span className="checklist-progress">
+                <span className="checklist-count">
                   {' '}({checklistDone}/{checklistItems.length})
                 </span>
               )}
             </h2>
             {checklistItems.length > 0 && (
-              <div className="checklist-progress-bar">
+              <div className="checklist-progress">
                 <div
-                  className="checklist-progress-fill"
+                  className="checklist-progress-bar"
                   style={{
-                    width: `${checklistItems.length > 0 ? (checklistDone / checklistItems.length) * 100 : 0}%`,
+                    width: `${(checklistDone / checklistItems.length) * 100}%`,
                   }}
                 />
               </div>
@@ -485,36 +491,75 @@ export function CardDetailPage() {
               ))}
             </ul>
           </section>
+          </div>
         </div>
 
-        {/* AI Sidebar */}
-        {showAi && (
-          <aside className="card-detail-ai">
-            <h2 className="section-title">🤖 Assistente IA</h2>
-            <div className="ai-actions">
-              <button type="button" className="btn btn-secondary" onClick={() => handleAi('summarize')} disabled={aiAction.isPending}>
-                📝 Resumir
-              </button>
-              <button type="button" className="btn btn-secondary" onClick={() => handleAi('subtasks')} disabled={aiAction.isPending}>
-                📋 Subtarefas
-              </button>
-              <button type="button" className="btn btn-secondary" onClick={() => handleAi('clarify')} disabled={aiAction.isPending}>
-                ❓ Esclarecer
-              </button>
-              <button type="button" className="btn btn-secondary" onClick={() => handleAi('risk')} disabled={aiAction.isPending}>
-                ⚠️ Riscos
-              </button>
-            </div>
-            {aiAction.isPending && (
-              <p className="loading-text">Processando com IA…</p>
+        {/* Chat à direita - preenche a altura */}
+        <aside ref={chatPanelRef} className="card-detail-ai card-detail-ai-chat">
+          <div className="card-detail-ai-chat-header">
+            <h2 className="section-title">🤖 Chat IA</h2>
+            <p className="card-detail-ai-chat-hint">Converse sobre o card, peça ajuda com descrição e subtarefas.</p>
+          </div>
+          <div className="card-detail-ai-chat-messages">
+            {chatMessages.length === 0 && (
+              <>
+                <div className="card-detail-ai-quick-actions">
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleAi('summarize')} disabled={aiAction.isPending}>
+                    📝 Resumir
+                  </button>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleAi('subtasks')} disabled={aiAction.isPending}>
+                    📋 Subtarefas
+                  </button>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleAi('clarify')} disabled={aiAction.isPending}>
+                    ❓ Esclarecer
+                  </button>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleAi('risk')} disabled={aiAction.isPending}>
+                    ⚠️ Riscos
+                  </button>
+                </div>
+                <div className="card-detail-ai-chat-welcome">
+                  <p>Ou digite abaixo para conversar. (Backend em desenvolvimento.)</p>
+                </div>
+              </>
             )}
-            {aiResult && (
-              <div className="ai-result">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiResult}</ReactMarkdown>
+            {chatMessages.map((msg) => (
+              <div key={msg.id} className={`card-detail-ai-chat-msg card-detail-ai-chat-msg--${msg.role}`}>
+                <span className="card-detail-ai-chat-msg-role">{msg.role === 'user' ? 'Você' : 'IA'}</span>
+                <div className="card-detail-ai-chat-msg-content">
+                  {msg.role === 'assistant' ? (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                  ) : (
+                    <p>{msg.content}</p>
+                  )}
+                </div>
               </div>
-            )}
-          </aside>
-        )}
+            ))}
+            <div ref={chatMessagesEndRef} />
+          </div>
+          <form
+            className="card-detail-ai-chat-form"
+            onSubmit={(e) => {
+              e.preventDefault()
+              const text = chatInput.trim()
+              if (!text) return
+              setChatMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'user', content: text }])
+              setChatInput('')
+              // Backend: enviar mensagem e adicionar resposta do assistente quando existir
+            }}
+          >
+            <textarea
+              className="input card-detail-ai-chat-input"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Mensagem para a IA…"
+              rows={2}
+              aria-label="Mensagem do chat"
+            />
+            <button type="submit" className="btn btn-primary card-detail-ai-chat-send" disabled={!chatInput.trim()}>
+              Enviar
+            </button>
+          </form>
+        </aside>
       </div>
 
       {/* Subtask Modal */}

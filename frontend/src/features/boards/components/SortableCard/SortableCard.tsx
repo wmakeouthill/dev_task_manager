@@ -120,7 +120,7 @@ export function SortableCard({ card, onOpen, checklistItems = [] }: Readonly<Sor
       {showDescModal && (
         <CardDescriptionModal
           titulo={card.titulo}
-          descricao={card.descricao}
+          descricao={card.descricao ?? ''}
           onClose={() => setShowDescModal(false)}
         />
       )}
