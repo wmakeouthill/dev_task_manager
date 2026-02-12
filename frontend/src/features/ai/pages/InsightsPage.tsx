@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { MarkdownWithCode } from '@/shared/components/MarkdownWithCode'
-import { useAiAction } from '@/features/ai'
-import { useSettings } from '@/features/settings'
+import { useAiAction, InsightsDropdown } from '@/features/ai'
+import { useSettings, getActiveProvider, getModelLabel } from '@/features/settings'
 
 export function InsightsPage() {
   const { settings } = useSettings()
+  const activeProvider = getActiveProvider(settings)
   const aiAction = useAiAction()
   const [insightResult, setInsightResult] = useState<string | null>(null)
   const [selectedAction, setSelectedAction] = useState<string>('board-insights')
 
-  const hasApiKey = settings.apiKey.trim() !== '' || settings.aiProvider === 'ollama'
+  const hasApiKey = activeProvider !== null
 
   const handleGenerateInsight = () => {
     aiAction.mutate(
@@ -48,19 +49,12 @@ export function InsightsPage() {
           Gere insights baseados nos cards marcados como "Gerar insights" (🤖 ativado no card).
           Apenas cards com a flag habilitada serão analisados para economizar tokens.
         </p>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-          <select
-            className="select"
+        <div className="insights-select-wrap">
+          <InsightsDropdown
             value={selectedAction}
-            onChange={(e) => setSelectedAction(e.target.value)}
-            aria-label="Tipo de insight"
-          >
-            <option value="board-insights">📊 Visão geral do board</option>
-            <option value="bottlenecks">🚧 Identificar gargalos</option>
-            <option value="priorities">🎯 Sugerir prioridades</option>
-            <option value="risks">⚠️ Análise de riscos</option>
-            <option value="sprint-review">📋 Sprint review</option>
-          </select>
+            onChange={setSelectedAction}
+            disabled={aiAction.isPending}
+          />
           <button
             type="button"
             className="btn btn-primary"
@@ -71,7 +65,9 @@ export function InsightsPage() {
           </button>
         </div>
         <p className="settings-hint" style={{ marginTop: 8 }}>
-          Provedor: {settings.aiProvider} • Modelo: {settings.aiModel}
+          {activeProvider
+            ? `Provedor: ${activeProvider.provider} • Modelo: ${getModelLabel(activeProvider.model)}`
+            : 'Nenhum provedor ativo'}
         </p>
       </section>
 

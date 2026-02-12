@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react'
-import type { AppSettings } from '../types/settings.types'
-import { DEFAULT_SETTINGS } from '../types/settings.types'
+import type { AppSettings, AiProviderConfig, AiProviderType } from '../types/settings.types'
+import { DEFAULT_SETTINGS, migrateFromLegacy } from '../types/settings.types'
 
 const STORAGE_KEY = 'devtaskmanager:settings'
 let cachedRaw: string | null = null
@@ -15,7 +15,12 @@ function getSnapshot(): AppSettings {
             cachedSnapshot = DEFAULT_SETTINGS
             return cachedSnapshot
         }
-        cachedSnapshot = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) }
+        const parsed = JSON.parse(raw) as unknown
+        if (parsed && typeof parsed === 'object' && 'aiProviders' in parsed && Array.isArray(parsed.aiProviders)) {
+            cachedSnapshot = parsed as AppSettings
+        } else {
+            cachedSnapshot = migrateFromLegacy(parsed)
+        }
         return cachedSnapshot
     } catch {
         cachedRaw = null
@@ -46,11 +51,22 @@ export function useSettings() {
         saveSettings({ ...current, ...patch })
     }, [])
 
+    const updateProviderConfig = useCallback(
+        (provider: AiProviderType, patch: Partial<AiProviderConfig>) => {
+            const current = getSnapshot()
+            const providers = current.aiProviders.map((c) =>
+                c.provider === provider ? { ...c, ...patch } : c
+            )
+            saveSettings({ aiProviders: providers })
+        },
+        []
+    )
+
     const resetSettings = useCallback(() => {
         saveSettings(DEFAULT_SETTINGS)
     }, [])
 
-    return { settings, updateSettings, resetSettings }
+    return { settings, updateSettings, updateProviderConfig, resetSettings }
 }
 
 /** Leitura direta fora de componentes React */
