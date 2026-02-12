@@ -13,71 +13,41 @@ import {
 } from '@dnd-kit/core'
 import {
   SortableContext,
-  verticalListSortingStrategy,
-  useSortable,
+  horizontalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { useBoard, useAddColumn, useUpdateColumn, useDeleteColumn } from '@/features/boards'
+import { useBoard, useAddColumn, useUpdateColumn, useMoveColumn, useDeleteColumn } from '@/features/boards'
 import { useCards, useCreateCard, useMoveCard } from '@/features/cards'
 import { ColumnSettingsModal } from '@/features/boards/components/ColumnSettingsModal'
+import { SortableColumn } from '@/features/boards/components/SortableColumn'
 import type { ColumnDto } from '@/features/boards/types/board.types'
 import type { Card } from '@/features/cards/types/card.types'
 import type { UpdateColumnRequest } from '@/features/boards/api/columnApi'
 
-function SortableCard({
-  card,
-  onOpen,
-}: {
-  card: Card
-  onOpen: (id: string) => void
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: card.id, data: { type: 'card', card } })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.4 : 1,
+function KanbanDragOverlayContent({
+  activeCard,
+  activeColumn,
+}: Readonly<{
+  activeCard: Card | null
+  activeColumn: ColumnDto | null
+}>) {
+  if (activeCard) {
+    return (
+      <div className="kanban-card kanban-card-dragging">
+        <span className="kanban-card-title">{activeCard.titulo}</span>
+      </div>
+    )
   }
-
-  return (
-    <li
-      ref={setNodeRef}
-      style={style}
-      className="kanban-card"
-      {...attributes}
-      {...listeners}
-    >
-      <div className="kanban-card-header">
-        <button
-          type="button"
-          className="kanban-card-title"
-          onClick={(e) => {
-            e.stopPropagation()
-            onOpen(card.id)
-          }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0, color: 'inherit', font: 'inherit', fontWeight: 500 }}
-        >
-          {card.titulo}
-        </button>
-        {card.aiEnabled && (
-          <span className="kanban-card-ai-badge" title="IA habilitada">🤖</span>
-        )}
+  if (activeColumn) {
+    return (
+      <div className="kanban-column kanban-column-dragging">
+        <div className="kanban-column-header">
+          <span className="kanban-column-drag-handle">⋮⋮</span>
+          <h2 className="kanban-column-title">{activeColumn.nome}</h2>
+        </div>
       </div>
-      <div className="kanban-card-meta">
-        <span className={`status-dot-sm status-${card.status.toLowerCase()}`} />
-        {card.status}
-        {card.dueDate && (
-          <span className="kanban-card-due">
-            {' '}• 📅 {new Date(card.dueDate).toLocaleDateString('pt-BR')}
-          </span>
-        )}
-      </div>
-      {card.descricao && (
-        <p className="kanban-card-desc">{card.descricao.slice(0, 80)}{card.descricao.length > 80 ? '…' : ''}</p>
-      )}
-    </li>
-  )
+    )
+  }
+  return null
 }
 
 export function BoardKanbanPage() {
@@ -85,12 +55,14 @@ export function BoardKanbanPage() {
   const navigate = useNavigate()
   const [newCardTitulo, setNewCardTitulo] = useState<Record<string, string>>({})
   const [activeCard, setActiveCard] = useState<Card | null>(null)
+  const [activeColumn, setActiveColumn] = useState<ColumnDto | null>(null)
   const [editingColumn, setEditingColumn] = useState<ColumnDto | null>(null)
 
   const { data: board, isLoading: loadingBoard } = useBoard(boardId ?? null)
   const { data: cardsData, isLoading: loadingCards } = useCards(boardId ?? null)
   const addColumn = useAddColumn(boardId ?? null)
   const updateColumn = useUpdateColumn(boardId ?? null)
+  const moveColumn = useMoveColumn(boardId ?? null)
   const deleteColumn = useDeleteColumn(boardId ?? null)
   const createCard = useCreateCard(boardId ?? null)
   const moveCard = useMoveCard(boardId ?? null)
@@ -114,10 +86,7 @@ export function BoardKanbanPage() {
     if (!titulo) return
     createCard.mutate(
       { columnId, titulo, ordem: cards.filter((c) => c.columnId === columnId).length },
-      {
-        onSuccess: () =>
-          setNewCardTitulo((prev) => ({ ...prev, [columnId]: '' })),
-      }
+      { onSuccess: () => setNewCardTitulo((prev) => ({ ...prev, [columnId]: '' })) }
     )
   }
 
@@ -132,13 +101,31 @@ export function BoardKanbanPage() {
   }
 
   const handleDragStart = (event: DragStartEvent) => {
+    const type = event.active.data.current?.type
+    if (type === 'column') {
+      setActiveColumn((event.active.data.current?.column as ColumnDto) ?? null)
+      return
+    }
     const card = cards.find((c) => c.id === event.active.id)
     if (card) setActiveCard(card)
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
-    setActiveCard(null)
     const { active, over } = event
+    const type = active.data.current?.type
+
+    if (type === 'column') {
+      setActiveColumn(null)
+      if (!over || over.id === active.id) return
+      const sortedCols = columns.slice().sort((a, b) => a.ordem - b.ordem)
+      const columnIds = sortedCols.map((c) => c.id)
+      const overIndex = columnIds.indexOf(over.id as string)
+      if (overIndex === -1) return
+      moveColumn.mutate({ id: active.id as string, data: { novaOrdem: overIndex } })
+      return
+    }
+
+    setActiveCard(null)
     if (!over || active.id === over.id) return
 
     const draggedCard = cards.find((c) => c.id === active.id)
@@ -146,7 +133,6 @@ export function BoardKanbanPage() {
 
     let targetColumnId: string
     let targetOrder: number
-
     const overCard = cards.find((c) => c.id === over.id)
     if (overCard) {
       targetColumnId = overCard.columnId
@@ -184,18 +170,28 @@ export function BoardKanbanPage() {
       <header className="kanban-header">
         <button
           type="button"
-          className="btn btn-ghost"
+          className="kanban-back-btn"
           onClick={() => navigate('/boards')}
           aria-label="Voltar para lista de boards"
         >
-          ← Voltar
+          <span className="kanban-back-icon" aria-hidden>←</span>
+          Voltar
         </button>
-        <h1 className="page-title" style={{ margin: 0 }}>
-          {board.nome}
-        </h1>
+        <h1 className="kanban-page-title">{board.nome}</h1>
         <span className="kanban-board-stats">
           {cards.length} cards • {columns.length} colunas
         </span>
+        <button
+          type="button"
+          className="btn btn-primary kanban-add-column-header-btn"
+          onClick={handleAddColumn}
+          disabled={addColumn.isPending}
+          aria-label="Adicionar nova coluna"
+          title="Adicionar coluna"
+        >
+          <span aria-hidden>+</span>
+          {addColumn.isPending ? 'Criando…' : 'Nova coluna'}
+        </button>
       </header>
 
       <DndContext
@@ -204,111 +200,47 @@ export function BoardKanbanPage() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="kanban-columns">
-          {sortedColumns.map((col) => {
-            const columnCards = cards
-              .filter((c) => c.columnId === col.id)
-              .sort((a, b) => a.ordem - b.ordem)
-
-            const isOverWip = col.wipLimit != null && columnCards.length > col.wipLimit
-
-            return (
-              <section
-                key={col.id}
-                className={`kanban-column ${isOverWip ? 'kanban-column-over-wip' : ''}`}
-                aria-labelledby={`col-${col.id}`}
-              >
-                <div className="kanban-column-header">
-                  <h2 id={`col-${col.id}`} className="kanban-column-title">
-                    {col.nome}
-                    <span className="kanban-column-count">
-                      {columnCards.length}
-                      {col.wipLimit != null ? `/${col.wipLimit}` : ''}
-                    </span>
-                  </h2>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-icon btn-sm kanban-column-settings-btn"
-                    onClick={() => setEditingColumn(col)}
-                    aria-label={`Configurações da coluna ${col.nome}`}
-                    title="Configurar coluna"
-                  >
-                    ✏️
-                  </button>
-                </div>
-
-                {isOverWip && (
-                  <div className="kanban-wip-warning">
-                    ⚠️ WIP excedido ({columnCards.length}/{col.wipLimit})
-                  </div>
-                )}
-
-                <SortableContext
-                  items={columnCards.map((c) => c.id)}
-                  strategy={verticalListSortingStrategy}
-                  id={col.id}
-                >
-                  <ul className="kanban-cards" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                    {loadingCards ? (
-                      <li className="loading-text">Carregando…</li>
-                    ) : (
-                      columnCards.map((card) => (
-                        <SortableCard
-                          key={card.id}
-                          card={card}
-                          onOpen={(id) => navigate(`/cards/${id}`)}
-                        />
-                      ))
-                    )}
-                  </ul>
-                </SortableContext>
-
-                <form
-                  className="kanban-add-card form-inline"
-                  onSubmit={(e) => handleAddCard(e, col.id)}
-                >
-                  <input
-                    className="input"
-                    value={newCardTitulo[col.id] ?? ''}
-                    onChange={(e) =>
-                      setNewCardTitulo((prev) => ({ ...prev, [col.id]: e.target.value }))
-                    }
-                    placeholder="Novo card…"
-                    aria-label={`Novo card em ${col.nome}`}
-                  />
-                  <button type="submit" className="btn btn-primary btn-icon" disabled={createCard.isPending}>
-                    +
-                  </button>
-                </form>
-              </section>
-            )
-          })}
-
-          {/* Notion-style Add Column Button */}
-          <button
-            type="button"
-            className="kanban-add-column-btn"
-            onClick={handleAddColumn}
-            disabled={addColumn.isPending}
-            aria-label="Adicionar nova coluna"
-            title="Adicionar coluna"
+        <div className="kanban-columns-wrap">
+          <SortableContext
+            items={sortedColumns.map((c) => c.id)}
+            strategy={horizontalListSortingStrategy}
           >
-            <span className="kanban-add-column-icon">+</span>
-            {!addColumn.isPending && <span className="kanban-add-column-text">Nova coluna</span>}
-            {addColumn.isPending && <span className="kanban-add-column-text">Criando…</span>}
-          </button>
+            <div className="kanban-columns">
+              {sortedColumns.map((col) => {
+                const columnCards = cards
+                  .filter((c) => c.columnId === col.id)
+                  .sort((a, b) => a.ordem - b.ordem)
+                const isOverWip = col.wipLimit != null && columnCards.length > col.wipLimit
+                return (
+                  <SortableColumn
+                    key={col.id}
+                    config={{
+                      column: col,
+                      isOverWip,
+                      columnCards,
+                      loadingCards: loadingCards ?? false,
+                      newCardTitulo,
+                      setNewCardTitulo,
+                      onAddCard: handleAddCard,
+                      onOpenCard: (id) => navigate(`/cards/${id}`),
+                      onSettings: setEditingColumn,
+                      createCardPending: createCard.isPending,
+                    }}
+                  />
+                )
+              })}
+            </div>
+          </SortableContext>
         </div>
 
         <DragOverlay>
-          {activeCard ? (
-            <div className="kanban-card kanban-card-dragging">
-              <span className="kanban-card-title">{activeCard.titulo}</span>
-            </div>
-          ) : null}
+          <KanbanDragOverlayContent
+            activeCard={activeCard}
+            activeColumn={activeColumn}
+          />
         </DragOverlay>
       </DndContext>
 
-      {/* Column Settings Modal */}
       {editingColumn && (
         <ColumnSettingsModal
           column={editingColumn}
