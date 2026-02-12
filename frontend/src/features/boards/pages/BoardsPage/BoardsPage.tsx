@@ -158,105 +158,79 @@ export function BoardsPage(_props: BoardsPageProps) {
       return <p className="loading-text">Carregando boards…</p>
     }
 
-    return (
-      <>
-        {boards.length === 0 ? (
-          <div className="boards-empty-state">
-            <span className="boards-empty-icon">📝</span>
-            <p>Nenhum board neste workspace ainda.</p>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-              Crie um board abaixo para começar.
-            </p>
-          </div>
-        ) : (
-          <div className="board-grid">
-            {boards.map((b) => {
-              const isEditing = editingBoard?.id === b.id
+    return boards.length === 0 ? (
+      <div className="boards-empty-state">
+        <span className="boards-empty-icon">📝</span>
+        <p>Nenhum board neste workspace ainda.</p>
+        <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+          Crie um board abaixo para começar.
+        </p>
+      </div>
+    ) : (
+      <div className="board-grid">
+        {boards.map((b) => {
+          const isEditing = editingBoard?.id === b.id
 
-              if (isEditing) {
-                return (
-                  <div key={b.id} className="board-card editing">
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault()
-                        handleSaveBoard()
-                      }}
-                    >
-                      <input
-                        ref={editBoardRef}
-                        className="input"
-                        value={editBoardName}
-                        onChange={(e) => setEditBoardName(e.target.value)}
-                        onBlur={handleSaveBoard}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Escape') setEditingBoard(null)
-                        }}
-                      />
-                    </form>
-                  </div>
-                )
-              }
+          if (isEditing) {
+            return (
+              <div key={b.id} className="board-card editing">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    handleSaveBoard()
+                  }}
+                >
+                  <input
+                    ref={editBoardRef}
+                    className="input"
+                    value={editBoardName}
+                    onChange={(e) => setEditBoardName(e.target.value)}
+                    onBlur={handleSaveBoard}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setEditingBoard(null)
+                    }}
+                  />
+                </form>
+              </div>
+            )
+          }
 
-              return (
-                <div key={b.id} className="board-card">
-                  <button
-                    type="button"
-                    className="board-card-main"
-                    onClick={() => navigate(`/boards/${b.id}`)}
-                  >
-                    <span className="board-card-name">{b.nome}</span>
-                    <span className="board-card-meta">
-                      {b.columns.length} coluna{b.columns.length === 1 ? '' : 's'}
-                    </span>
-                  </button>
-                  <div className="board-card-actions">
-                    <button
-                      type="button"
-                      className="btn-icon-action"
-                      onClick={() => startEditBoard(b)}
-                      title="Renomear board"
-                      aria-label={`Renomear ${b.nome}`}
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-icon-action danger"
-                      onClick={() => setDeleteBoardTarget(b)}
-                      title="Excluir board"
-                      aria-label={`Excluir ${b.nome}`}
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        <form onSubmit={handleCreateBoard} className="boards-create-form">
-          <input
-            className="input input-sm"
-            value={newBoardNome}
-            onChange={(e) => setNewBoardNome(e.target.value)}
-            placeholder="Novo board…"
-            aria-label="Nome do novo board"
-          />
-          <button
-            type="submit"
-            className="btn btn-primary btn-sm"
-            disabled={createBoard.isPending}
-          >
-            {createBoard.isPending ? '…' : '+'}
-          </button>
-        </form>
-        {createBoard.isError && (
-          <p className="alert alert-error" style={{ marginTop: 8 }}>
-            Erro ao criar board.
-          </p>
-        )}
-      </>
+          return (
+            <div key={b.id} className="board-card">
+              <button
+                type="button"
+                className="board-card-main"
+                onClick={() => navigate(`/boards/${b.id}`)}
+              >
+                <span className="board-card-name">{b.nome}</span>
+                <span className="board-card-meta">
+                  {b.columns.length} coluna{b.columns.length === 1 ? '' : 's'}
+                </span>
+              </button>
+              <div className="board-card-actions">
+                <button
+                  type="button"
+                  className="btn-icon-action"
+                  onClick={() => startEditBoard(b)}
+                  title="Renomear board"
+                  aria-label={`Renomear ${b.nome}`}
+                >
+                  ✏️
+                </button>
+                <button
+                  type="button"
+                  className="btn-icon-action danger"
+                  onClick={() => setDeleteBoardTarget(b)}
+                  title="Excluir board"
+                  aria-label={`Excluir ${b.nome}`}
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
     )
   }
 
@@ -283,6 +257,7 @@ export function BoardsPage(_props: BoardsPageProps) {
             <span className="boards-panel-count">{workspaces.length}</span>
           </div>
 
+          <div className="boards-panel-content">
           <ul className="workspace-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {workspaces.map((w) => {
               const isSelected = selectedWorkspaceId === w.id
@@ -354,6 +329,7 @@ export function BoardsPage(_props: BoardsPageProps) {
               )
             })}
           </ul>
+          </div>
 
           <form onSubmit={handleCreateWorkspace} className="boards-create-form">
             <input
@@ -389,7 +365,35 @@ export function BoardsPage(_props: BoardsPageProps) {
             )}
           </div>
 
-          {renderBoardsContent()}
+          <div className="boards-panel-content">
+            {renderBoardsContent()}
+          </div>
+
+          {selectedWorkspaceId && (
+            <>
+              <form onSubmit={handleCreateBoard} className="boards-create-form">
+                <input
+                  className="input input-sm"
+                  value={newBoardNome}
+                  onChange={(e) => setNewBoardNome(e.target.value)}
+                  placeholder="Novo board…"
+                  aria-label="Nome do novo board"
+                />
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-sm"
+                  disabled={createBoard.isPending}
+                >
+                  {createBoard.isPending ? '…' : '+'}
+                </button>
+              </form>
+              {createBoard.isError && (
+                <p className="alert alert-error" style={{ marginTop: 8 }}>
+                  Erro ao criar board.
+                </p>
+              )}
+            </>
+          )}
         </section>
       </div>
 

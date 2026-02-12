@@ -91,7 +91,7 @@ export function migrateFromLegacy(raw: unknown): AppSettings {
             enabled: true,
         }
     }
-    return { aiProviders: base, notificationMode: 'both' }
+    return { aiProviders: base, notificationMode: 'both', toastPosition: 'top-right' }
 }
 
 /** Retorna o primeiro provedor habilitado com chave válida (ou Ollama) */

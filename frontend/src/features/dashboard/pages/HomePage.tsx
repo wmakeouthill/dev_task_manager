@@ -4,6 +4,9 @@ import { useDashboard, useCurrentUser } from '@/features/dashboard'
 import { useReminders } from '@/features/reminders'
 import { useAiAction } from '@/features/ai'
 import { MarkdownWithCode } from '@/shared/components/MarkdownWithCode'
+import { CardPreviewModal } from '@/shared/components/CardPreviewModal'
+
+const RECENT_CARDS_PAGE_SIZE = 5
 
 const DAILY_INSIGHT_KEY = 'devtaskmanager:daily-insight'
 const DAILY_INSIGHT_TTL = 24 * 60 * 60 * 1000 // 1 dia
@@ -40,6 +43,8 @@ export function HomePage() {
   const { data: remindersData } = useReminders()
   const aiAction = useAiAction()
   const [dailyInsight, setDailyInsight] = useState<string | null>(null)
+  const [previewCardId, setPreviewCardId] = useState<string | null>(null)
+  const [recentPage, setRecentPage] = useState(1)
 
   // Carregar insight do cache local ao montar
   useEffect(() => {
@@ -175,19 +180,52 @@ export function HomePage() {
         <section className="card home-section home-section-recentes">
           <h2 className="section-title">🕐 Cards recentes</h2>
           {dashboard?.recentCards?.length ? (
-            <ul className="home-card-list">
-              {dashboard.recentCards.map((card) => (
-                <li key={card.id} className="home-card-item">
-                  <span className={`status-dot status-${card.status.toLowerCase()}`} />
-                  <div className="home-card-info">
-                    <span className="home-card-title">{card.titulo}</span>
-                    <span className="home-card-meta">
-                      {card.status} • {new Date(card.createdAt).toLocaleDateString('pt-BR')}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="home-card-list">
+                {dashboard.recentCards
+                  .slice((recentPage - 1) * RECENT_CARDS_PAGE_SIZE, recentPage * RECENT_CARDS_PAGE_SIZE)
+                  .map((card) => (
+                  <li key={card.id} className="home-card-item">
+                    <button
+                      type="button"
+                      className="home-card-item-btn"
+                      onClick={() => setPreviewCardId(card.id)}
+                    >
+                      <span className={`status-dot status-${card.status.toLowerCase()}`} />
+                      <div className="home-card-info">
+                        <span className="home-card-title">{card.titulo}</span>
+                        <span className="home-card-meta">
+                          {card.status} • {new Date(card.createdAt).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {dashboard.recentCards.length > RECENT_CARDS_PAGE_SIZE && (
+                <div className="home-pagination">
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    disabled={recentPage <= 1}
+                    onClick={() => setRecentPage((p) => p - 1)}
+                  >
+                    ← Anterior
+                  </button>
+                  <span className="home-pagination-info">
+                    {recentPage} / {Math.ceil(dashboard.recentCards.length / RECENT_CARDS_PAGE_SIZE)}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    disabled={recentPage >= Math.ceil(dashboard.recentCards.length / RECENT_CARDS_PAGE_SIZE)}
+                    onClick={() => setRecentPage((p) => p + 1)}
+                  >
+                    Próximo →
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <p className="loading-text">Nenhum card recente.</p>
           )}
@@ -197,19 +235,27 @@ export function HomePage() {
         {(dashboard?.overdueCards?.length ?? 0) > 0 && (
           <section className="card home-section home-section-warning home-section-atrasados">
             <h2 className="section-title">⚠️ Cards atrasados</h2>
-            <ul className="home-card-list">
-              {dashboard!.overdueCards.map((card) => (
-                <li key={card.id} className="home-card-item">
-                  <span className="status-dot status-overdue" />
-                  <div className="home-card-info">
-                    <span className="home-card-title">{card.titulo}</span>
-                    <span className="home-card-meta">
-                      Venceu em {new Date(card.dueDate!).toLocaleDateString('pt-BR')}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <div className="home-overdue-scroll">
+              <ul className="home-card-list">
+                {dashboard!.overdueCards.map((card) => (
+                  <li key={card.id} className="home-card-item">
+                    <button
+                      type="button"
+                      className="home-card-item-btn"
+                      onClick={() => setPreviewCardId(card.id)}
+                    >
+                      <span className="status-dot status-overdue" />
+                      <div className="home-card-info">
+                        <span className="home-card-title">{card.titulo}</span>
+                        <span className="home-card-meta">
+                          Venceu em {new Date(card.dueDate!).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </section>
         )}
 
@@ -290,6 +336,14 @@ export function HomePage() {
           )}
         </section>
       </div>
+
+      {/* Card Preview Modal */}
+      {previewCardId && (
+        <CardPreviewModal
+          cardId={previewCardId}
+          onClose={() => setPreviewCardId(null)}
+        />
+      )}
     </div>
   )
 }
