@@ -17,8 +17,22 @@ export const reminderApi = {
     }) =>
         api.post<ReminderData>('/reminders', data).then((r) => r.data),
 
+    editar: (id: string, data: {
+        titulo?: string
+        descricao?: string
+        scheduleAt?: string
+        recurrence?: string
+        recurrenceDays?: number
+    }) =>
+        api.put<ReminderData>(`/reminders/${id}`, data).then((r) => r.data),
+
     snooze: (id: string, until: string) =>
         api.patch<ReminderData>(`/reminders/${id}/snooze`, { until }).then((r) => r.data),
 
-    cancelar: (id: string) => api.delete(`/reminders/${id}`),
+    completar: (id: string) =>
+        api.patch<ReminderData>(`/reminders/${id}/complete`).then((r) => r.data),
+
+    cancelar: (id: string) => api.patch(`/reminders/${id}/cancel`),
+
+    deletar: (id: string) => api.delete(`/reminders/${id}`),
 }

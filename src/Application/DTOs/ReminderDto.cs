@@ -29,3 +29,10 @@ public record CreateReminderRequest(
     int? RecurrenceDays = null);
 
 public record SnoozeReminderRequest(DateTime Until);
+
+public record UpdateReminderRequest(
+    string? Titulo = null,
+    string? Descricao = null,
+    DateTime? ScheduleAt = null,
+    string? Recurrence = null,
+    int? RecurrenceDays = null);

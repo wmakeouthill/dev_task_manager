@@ -64,7 +64,7 @@ public sealed class ReminderNotificationService : IDisposable
             foreach (var reminder in result.Content)
             {
                 if (string.Equals(reminder.Status, "Pending", StringComparison.OrdinalIgnoreCase)
-                    && reminder.ScheduledAt <= now)
+                    && reminder.ScheduleAt <= now)
                 {
                     ShowToast(reminder);
                 }
@@ -81,8 +81,9 @@ public sealed class ReminderNotificationService : IDisposable
         new ToastContentBuilder()
             .AddArgument("action", "viewReminder")
             .AddArgument("reminderId", reminder.Id)
-            .AddText("⏰ Lembrete — Dev Task Manager")
-            .AddText(reminder.Mensagem)
+            .AddText("🔔 Dev Task Manager")
+            .AddText(reminder.Titulo)
+            .AddText(reminder.Descricao ?? string.Empty)
             .SetToastScenario(ToastScenario.Reminder)
             .Show();
     }
@@ -104,8 +105,9 @@ public sealed class ReminderNotificationService : IDisposable
     private sealed class ReminderDto
     {
         public string Id { get; set; } = string.Empty;
-        public string Mensagem { get; set; } = string.Empty;
+        public string Titulo { get; set; } = string.Empty;
+        public string? Descricao { get; set; }
         public string Status { get; set; } = string.Empty;
-        public DateTime ScheduledAt { get; set; } = DateTime.MinValue;
+        public DateTime ScheduleAt { get; set; } = DateTime.MinValue;
     }
 }

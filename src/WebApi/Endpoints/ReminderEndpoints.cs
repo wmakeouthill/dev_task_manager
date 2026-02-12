@@ -46,7 +46,34 @@ public static class ReminderEndpoints
         .WithSummary("Adia lembrete")
         .Produces<ReminderDto>();
 
-        group.MapDelete("/{id:guid}", async (Guid id, CancelReminderService service, CancellationToken ct) =>
+        group.MapPatch("/{id:guid}/complete", async (Guid id, CompleteReminderService service, CancellationToken ct) =>
+        {
+            var reminder = await service.ExecuteAsync(id, ct);
+            return Results.Ok(reminder);
+        })
+        .WithName("CompleteReminder")
+        .WithSummary("Marca lembrete como concluído")
+        .Produces<ReminderDto>();
+
+        group.MapPut("/{id:guid}", async (Guid id, UpdateReminderRequest request, UpdateReminderService service, CancellationToken ct) =>
+        {
+            var reminder = await service.ExecuteAsync(id, request, ct);
+            return Results.Ok(reminder);
+        })
+        .WithName("UpdateReminder")
+        .WithSummary("Edita lembrete")
+        .Produces<ReminderDto>();
+
+        group.MapDelete("/{id:guid}", async (Guid id, DeleteReminderService service, CancellationToken ct) =>
+        {
+            await service.ExecuteAsync(id, ct);
+            return Results.NoContent();
+        })
+        .WithName("DeleteReminder")
+        .WithSummary("Exclui lembrete permanentemente")
+        .Produces(StatusCodes.Status204NoContent);
+
+        group.MapPatch("/{id:guid}/cancel", async (Guid id, CancelReminderService service, CancellationToken ct) =>
         {
             await service.ExecuteAsync(id, ct);
             return Results.NoContent();

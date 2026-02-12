@@ -6,7 +6,8 @@ public enum ReminderStatus
 {
     Pending = 0,
     Triggered = 1,
-    Cancelled = 2
+    Cancelled = 2,
+    Completed = 3
 }
 
 public enum ReminderRecurrence
@@ -90,5 +91,32 @@ public class Reminder
     public void Cancel()
     {
         Status = ReminderStatus.Cancelled;
+    }
+
+    public void Complete()
+    {
+        Status = ReminderStatus.Completed;
+    }
+
+    public void Atualizar(string? titulo, string? descricao, DateTime? scheduleAt, ReminderRecurrence? recurrence, int? recurrenceDays)
+    {
+        if (titulo is not null)
+        {
+            if (string.IsNullOrWhiteSpace(titulo))
+                throw new RegraDeNegocioException("Título do lembrete é obrigatório.");
+            Titulo = titulo.Trim();
+        }
+
+        if (descricao is not null)
+            Descricao = descricao.Trim();
+
+        if (scheduleAt.HasValue)
+            ScheduleAt = scheduleAt.Value;
+
+        if (recurrence.HasValue)
+            Recurrence = recurrence.Value;
+
+        if (recurrenceDays.HasValue)
+            RecurrenceDays = recurrenceDays.Value;
     }
 }

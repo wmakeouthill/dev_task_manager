@@ -9,9 +9,17 @@ export interface AiProviderConfig {
     enabled: boolean
 }
 
+/** Modo de notificação de lembretes */
+export type NotificationMode = 'both' | 'native' | 'in-app'
+
+/** Posição do toast in-app */
+export type ToastPosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'
+
 /** Configurações da aplicação salvas localmente */
 export interface AppSettings {
     aiProviders: AiProviderConfig[]
+    notificationMode: NotificationMode
+    toastPosition: ToastPosition
 }
 
 /** Formato legado para migração */
@@ -63,6 +71,8 @@ function createDefaultProviderConfig(provider: AiProviderType): AiProviderConfig
 
 export const DEFAULT_SETTINGS: AppSettings = {
     aiProviders: AI_PROVIDERS.map((p) => createDefaultProviderConfig(p.value)),
+    notificationMode: 'both',
+    toastPosition: 'top-right',
 }
 
 export function migrateFromLegacy(raw: unknown): AppSettings {
@@ -81,7 +91,7 @@ export function migrateFromLegacy(raw: unknown): AppSettings {
             enabled: true,
         }
     }
-    return { aiProviders: base }
+    return { aiProviders: base, notificationMode: 'both' }
 }
 
 /** Retorna o primeiro provedor habilitado com chave válida (ou Ollama) */

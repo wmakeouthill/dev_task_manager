@@ -1,3 +1,6 @@
 export { workspaceApi } from './workspaceApi'
+export { useWorkspace } from './useWorkspace'
 export { useWorkspaces } from './useWorkspaces'
 export { useCreateWorkspace } from './useCreateWorkspace'
+export { useUpdateWorkspace } from './useUpdateWorkspace'
+export { useDeleteWorkspace } from './useDeleteWorkspace'

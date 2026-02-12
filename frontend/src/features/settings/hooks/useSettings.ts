@@ -17,7 +17,11 @@ function getSnapshot(): AppSettings {
         }
         const parsed = JSON.parse(raw) as unknown
         if (parsed && typeof parsed === 'object' && 'aiProviders' in parsed && Array.isArray(parsed.aiProviders)) {
-            cachedSnapshot = parsed as AppSettings
+            const obj = parsed as AppSettings
+            // Garante que campos novos existam (migração incremental)
+            if (!obj.notificationMode) obj.notificationMode = DEFAULT_SETTINGS.notificationMode
+            if (!obj.toastPosition) obj.toastPosition = DEFAULT_SETTINGS.toastPosition
+            cachedSnapshot = obj
         } else {
             cachedSnapshot = migrateFromLegacy(parsed)
         }
@@ -57,7 +61,7 @@ export function useSettings() {
             const providers = current.aiProviders.map((c) =>
                 c.provider === provider ? { ...c, ...patch } : c
             )
-            saveSettings({ aiProviders: providers })
+            saveSettings({ ...current, aiProviders: providers })
         },
         []
     )

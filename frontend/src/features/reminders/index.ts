@@ -1,1 +1,1 @@
-export { useReminders, useCreateReminder, useSnoozeReminder, useCancelReminder } from './api/useReminders'
+export { useReminders, useCreateReminder, useUpdateReminder, useSnoozeReminder, useCompleteReminder, useCancelReminder, useDeleteReminder } from './api/useReminders'

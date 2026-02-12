@@ -1,18 +1,19 @@
 import type { ReminderData } from '@/shared/types'
 
 interface ReminderToastProps {
-    reminder: ReminderData
-    onSnooze: (minutes: number) => void
-    onDismiss: () => void
+    readonly reminder: ReminderData
+    readonly onSnooze: (minutes: number) => void
+    readonly onComplete: () => void
+    readonly onDismiss: () => void
 }
 
-const SNOOZE_OPTIONS = [5, 10, 20, 30] as const
+const SNOOZE_OPTIONS = [5, 10, 30] as const
 
 /**
  * Toast in-app para lembrete pendente.
- * Exibe título, descrição e botões de snooze (5/10/20/30 min) + cancelar.
+ * Exibe título, descrição e botões de concluir, snooze e cancelar.
  */
-export function ReminderToast({ reminder, onSnooze, onDismiss }: ReminderToastProps) {
+export function ReminderToast({ reminder, onSnooze, onComplete, onDismiss }: ReminderToastProps) {
     return (
         <div className="reminder-toast" role="alert" aria-live="assertive">
             <div className="reminder-toast-content">
@@ -33,6 +34,13 @@ export function ReminderToast({ reminder, onSnooze, onDismiss }: ReminderToastPr
                 </button>
             </div>
             <div className="reminder-toast-actions">
+                <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={onComplete}
+                >
+                    ✓ Concluir
+                </button>
                 {SNOOZE_OPTIONS.map((min) => (
                     <button
                         key={min}

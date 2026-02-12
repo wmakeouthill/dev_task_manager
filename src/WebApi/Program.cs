@@ -112,6 +112,9 @@ builder.Services.AddScoped<CreateReminderService>();
 builder.Services.AddScoped<ListRemindersService>();
 builder.Services.AddScoped<SnoozeReminderService>();
 builder.Services.AddScoped<CancelReminderService>();
+builder.Services.AddScoped<CompleteReminderService>();
+builder.Services.AddScoped<UpdateReminderService>();
+builder.Services.AddScoped<DeleteReminderService>();
 builder.Services.AddScoped<AiActionService>();
 builder.Services.AddScoped<AiChatService>();
 builder.Services.AddScoped<DashboardService>();
@@ -181,6 +184,9 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
     // Garante que todas as tabelas existam (útil quando a migração já estava no histórico mas o banco era antigo).
     await EnsureAllTablesAsync(db);
+
+    // Aplica alterações incrementais de schema (novas colunas em tabelas existentes).
+    await ApplySchemaUpgradesAsync(db);
 }
 
 app.Run();
@@ -210,4 +216,34 @@ static async Task EnsureAllTablesAsync(AppDbContext db)
     };
     foreach (var sql in statements)
         await db.Database.ExecuteSqlRawAsync(sql);
+}
+
+/// <summary>
+/// Aplica ALTER TABLE ADD COLUMN para colunas que podem não existir em bancos de versões anteriores.
+/// SQLite ignora ADD COLUMN se a coluna já existe (via try/catch), garantindo upgrade seguro.
+/// Adicione novos upgrades ao final da lista — eles são executados em ordem.
+/// </summary>
+static async Task ApplySchemaUpgradesAsync(AppDbContext db)
+{
+    // Cada entrada: (tabela, coluna, tipo SQL, valor default opcional)
+    var columnUpgrades = new (string table, string column, string sqlType, string? defaultValue)[]
+    {
+        // v1.1 — Exemplo de futuras colunas:
+        // ("cards", "Priority", "TEXT NULL", null),
+        // ("cards", "Labels", "TEXT NULL", null),
+    };
+
+    foreach (var (table, column, sqlType, defaultValue) in columnUpgrades)
+    {
+        try
+        {
+            var defaultClause = defaultValue is not null ? " DEFAULT " + defaultValue : "";
+            var sql = "ALTER TABLE " + table + " ADD COLUMN " + column + " " + sqlType + defaultClause;
+            await db.Database.ExecuteSqlRawAsync(sql);
+        }
+        catch (Microsoft.Data.Sqlite.SqliteException ex) when (ex.SqliteErrorCode == 1)
+        {
+            // "duplicate column name" — coluna já existe, ignorar
+        }
+    }
 }

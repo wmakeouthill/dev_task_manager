@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQueries } from '@tanstack/react-query'
 import {
@@ -20,10 +20,12 @@ import {
 } from '@dnd-kit/sortable'
 import { useBoard, useAddColumn, useUpdateColumn, useMoveColumn, useDeleteColumn } from '@/features/boards'
 import { useCards, useCreateCard, useMoveCard } from '@/features/cards'
+import { useWorkspace } from '@/features/workspaces'
 import { checklistApi } from '@/features/cards/api/cardExtrasApi'
 import type { ChecklistItemData } from '@/shared/types'
 import { ColumnSettingsModal } from '@/features/boards/components/ColumnSettingsModal'
 import { SortableColumn } from '@/features/boards/components/SortableColumn'
+import { Breadcrumb } from '@/shared/components/Breadcrumb/Breadcrumb'
 import type { ColumnDto } from '@/features/boards/types/board.types'
 import type { Card } from '@/features/cards/types/card.types'
 import type { UpdateColumnRequest } from '@/features/boards/api/columnApi'
@@ -72,7 +74,17 @@ export function BoardKanbanPage() {
 
   const { data: board, isLoading: loadingBoard } = useBoard(boardId ?? null)
   const { data: cardsData, isLoading: loadingCards } = useCards(boardId ?? null)
+  const { data: workspace } = useWorkspace(board?.workspaceId ?? null)
   const addColumn = useAddColumn(boardId ?? null)
+
+  // Persist workspace selection so going back to /boards shows the right workspace
+  useEffect(() => {
+    if (board?.workspaceId) {
+      try {
+        localStorage.setItem('boards-nav-selected-workspace', board.workspaceId)
+      } catch { /* noop */ }
+    }
+  }, [board?.workspaceId])
   const updateColumn = useUpdateColumn(boardId ?? null)
   const moveColumn = useMoveColumn(boardId ?? null)
   const deleteColumn = useDeleteColumn(boardId ?? null)
@@ -194,11 +206,17 @@ export function BoardKanbanPage() {
 
   const sortedColumns = columns.slice().sort((a, b) => a.ordem - b.ordem)
 
+  const breadcrumbItems = [
+    { label: '📋 Boards', to: '/boards' },
+    ...(workspace ? [{ label: workspace.nome, to: '/boards' }] : []),
+    { label: board.nome },
+  ]
+
   return (
     <div className="page kanban-page">
       <header className="kanban-header">
         <div className="kanban-header-title-block">
-          <h1 className="kanban-page-title">{board.nome}</h1>
+          <Breadcrumb items={breadcrumbItems} />
           <span className="kanban-board-stats">
             {cards.length} cards • {columns.length} colunas
           </span>
@@ -214,15 +232,6 @@ export function BoardKanbanPage() {
           >
             <span aria-hidden>+</span>
             {addColumn.isPending ? 'Criando…' : 'Nova coluna'}
-          </button>
-          <button
-            type="button"
-            className="kanban-back-btn"
-            onClick={() => navigate('/boards')}
-            aria-label="Voltar para lista de boards"
-          >
-            <span className="kanban-back-icon" aria-hidden>←</span>
-            Voltar
           </button>
         </div>
       </header>
