@@ -232,9 +232,13 @@ export function HomePage() {
         </section>
 
         {/* Overdue cards — col 1, row 2 */}
-        {(dashboard?.overdueCards?.length ?? 0) > 0 && (
-          <section className="card home-section home-section-warning home-section-atrasados">
-            <h2 className="section-title">⚠️ Cards atrasados</h2>
+        <section
+          className={`card home-section home-section-atrasados ${
+            (dashboard?.overdueCards?.length ?? 0) > 0 ? 'home-section-warning' : ''
+          }`}
+        >
+          <h2 className="section-title">⚠️ Cards atrasados</h2>
+          {(dashboard?.overdueCards?.length ?? 0) > 0 ? (
             <div className="home-overdue-scroll">
               <ul className="home-card-list">
                 {dashboard!.overdueCards.map((card) => (
@@ -256,8 +260,10 @@ export function HomePage() {
                 ))}
               </ul>
             </div>
-          </section>
-        )}
+          ) : (
+            <p className="loading-text">Nenhum card atrasado.</p>
+          )}
+        </section>
 
         {/* Pending reminders — col 2, row 1 */}
         <section className="card home-section home-section-lembretes">

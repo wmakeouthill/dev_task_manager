@@ -6,9 +6,35 @@
         xmlns:local="clr-namespace:DevTaskManager.Desktop"
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
-        Title="Dev Task Manager" Height="720" Width="1200"
+        Title="Dev Task Manager"
+        Height="720"
+        Width="1200"
         Icon="pack://application:,,,/icon.ico">
     <Grid>
-        <wv2:WebView2 x:Name="AppWebView" />
+        <wv2:WebView2 x:Name="AppWebView"/>
+
+        <!-- Overlay de carregamento — some quando o SPA termina de carregar -->
+        <Border x:Name="LoadingOverlay"
+                Background="#1a1a2e"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            <StackPanel HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <TextBlock Text="Dev Task Manager"
+                           FontSize="22"
+                        FontWeight="SemiBold"
+                           Foreground="#e0e0e0"
+                        HorizontalAlignment="Center"/>
+                <TextBlock x:Name="LoadingText"
+                           Text="Carregando…"
+                           FontSize="14"
+                        Foreground="#888"
+                           HorizontalAlignment="Center"
+                        Margin="0,10,0,0"
+                           TextWrapping="Wrap"
+                        TextAlignment="Center"
+                           MaxWidth="400"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

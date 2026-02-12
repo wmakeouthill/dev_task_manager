@@ -11,12 +11,14 @@ namespace DevTaskManager.Desktop.Services;
 
 /// <summary>
 /// Polls the WebAPI for pending reminders and shows Windows toast notifications.
+/// Cada lembrete é notificado apenas uma vez por sessão para evitar spam.
 /// </summary>
 public sealed class ReminderNotificationService : IDisposable
 {
     private readonly HttpClient _http;
     private readonly Timer _timer;
     private readonly TimeSpan _interval = TimeSpan.FromSeconds(30);
+    private readonly HashSet<string> _notifiedIds = [];
     private bool _disposed;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -32,7 +34,8 @@ public sealed class ReminderNotificationService : IDisposable
             Timeout = TimeSpan.FromSeconds(10)
         };
 
-        _timer = new Timer(PollReminders, null, TimeSpan.FromSeconds(5), _interval);
+        // Aguarda 10s antes do primeiro poll — dá tempo para a API inicializar
+        _timer = new Timer(PollReminders, null, TimeSpan.FromSeconds(10), _interval);
     }
 
     private static Uri GetApiBaseAddress()
@@ -43,8 +46,8 @@ public sealed class ReminderNotificationService : IDisposable
             return new Uri(configured, UriKind.Absolute);
         }
 
-        // Default for local development
-        return new Uri("http://localhost:5000/api/v1/", UriKind.Absolute); // NOSONAR
+        // Mesma porta usada pela WebAPI (launchSettings + WebApiHostService)
+        return new Uri("http://localhost:5011/api/v1/", UriKind.Absolute); // NOSONAR
     }
 
     private async void PollReminders(object? state)
@@ -63,8 +66,10 @@ public sealed class ReminderNotificationService : IDisposable
             var now = DateTime.UtcNow;
             foreach (var reminder in result.Content)
             {
+                // Só notifica se: status Pending, hora já passou, e ainda não notificado nesta sessão
                 if (string.Equals(reminder.Status, "Pending", StringComparison.OrdinalIgnoreCase)
-                    && reminder.ScheduleAt <= now)
+                    && reminder.ScheduleAt <= now
+                    && _notifiedIds.Add(reminder.Id))
                 {
                     ShowToast(reminder);
                 }
@@ -84,7 +89,6 @@ public sealed class ReminderNotificationService : IDisposable
             .AddText("🔔 Dev Task Manager")
             .AddText(reminder.Titulo)
             .AddText(reminder.Descricao ?? string.Empty)
-            .SetToastScenario(ToastScenario.Reminder)
             .Show();
     }
 
@@ -92,8 +96,12 @@ public sealed class ReminderNotificationService : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+
+        // Para o timer imediatamente para evitar callbacks após dispose
+        _timer.Change(Timeout.Infinite, Timeout.Infinite);
         _timer.Dispose();
         _http.Dispose();
+        _notifiedIds.Clear();
     }
 
     // Lightweight DTOs for deserialization
