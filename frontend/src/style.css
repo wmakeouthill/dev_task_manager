@@ -1217,8 +1217,11 @@ select:focus-visible {
 }
 
 .card-detail-layout {
+  --chat-width: 420px;
+  --chat-min: 280px;
+  --chat-max: 560px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(360px, 1fr) 6px var(--chat-width);
   grid-template-rows: 1fr;
   gap: 0;
   align-items: stretch;
@@ -1235,6 +1238,30 @@ select:focus-visible {
   min-height: 0;
 }
 
+.card-detail-chat-resize-handle {
+  width: 6px;
+  cursor: col-resize;
+  background: var(--border-subtle);
+  flex-shrink: 0;
+  position: relative;
+  transition: background 0.15s;
+}
+
+.card-detail-chat-resize-handle:hover,
+.card-detail-chat-resize-handle.is-resizing {
+  background: var(--accent);
+  width: 6px;
+}
+
+.card-detail-chat-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -4px;
+  right: -4px;
+}
+
 .card-detail-page .card-detail-layout {
   width: 100%;
 }
@@ -1242,6 +1269,10 @@ select:focus-visible {
 @media (max-width: 960px) {
   .card-detail-layout {
     grid-template-columns: 1fr;
+  }
+
+  .card-detail-chat-resize-handle {
+    display: none;
   }
 }
 

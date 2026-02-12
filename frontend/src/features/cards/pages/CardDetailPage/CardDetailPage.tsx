@@ -43,6 +43,27 @@ export function CardDetailPage() {
   const [chatInput, setChatInput] = useState('')
   const chatPanelRef = useRef<HTMLElement>(null)
   const chatMessagesEndRef = useRef<HTMLDivElement>(null)
+  const layoutRef = useRef<HTMLDivElement>(null)
+
+  const CHAT_WIDTH_MIN = 280
+  const CHAT_WIDTH_MAX = 560
+  const CHAT_WIDTH_DEFAULT = 420
+  const [chatWidth, setChatWidth] = useState(() => {
+    try {
+      const saved = localStorage.getItem('card-detail-chat-width')
+      if (saved) {
+        const n = parseInt(saved, 10)
+        if (n >= CHAT_WIDTH_MIN && n <= CHAT_WIDTH_MAX) return n
+      }
+    } catch {
+      /* ignore */
+    }
+    return CHAT_WIDTH_DEFAULT
+  })
+  const [isResizingChat, setIsResizingChat] = useState(false)
+  const resizeStartRef = useRef<{ x: number; w: number } | null>(null)
+  const chatWidthRef = useRef(chatWidth)
+  chatWidthRef.current = chatWidth
   const [selectedSubtask, setSelectedSubtask] = useState<ChecklistItemData | null>(null)
   const [editingDueDate, setEditingDueDate] = useState(false)
   const [dueDateInput, setDueDateInput] = useState('')
@@ -79,6 +100,36 @@ export function CardDetailPage() {
   useEffect(() => {
     resizeTextarea(chatTextareaRef.current)
   }, [chatInput])
+
+  useEffect(() => {
+    if (!isResizingChat) return
+    document.body.style.userSelect = 'none'
+    document.body.style.cursor = 'col-resize'
+    const onMove = (e: MouseEvent) => {
+      const start = resizeStartRef.current
+      if (!start) return
+      const delta = start.x - e.clientX
+      const next = Math.min(CHAT_WIDTH_MAX, Math.max(CHAT_WIDTH_MIN, start.w + delta))
+      setChatWidth(next)
+    }
+    const onUp = () => {
+      setIsResizingChat(false)
+      resizeStartRef.current = null
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+      try {
+        localStorage.setItem('card-detail-chat-width', String(chatWidthRef.current))
+      } catch {
+        /* ignore */
+      }
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [isResizingChat])
 
   useEffect(() => {
     const ta = descTextareaRef.current
@@ -238,7 +289,17 @@ export function CardDetailPage() {
 
   return (
     <div className="card-detail-page">
-      <div className="card-detail-layout">
+      <div
+        ref={layoutRef}
+        className="card-detail-layout"
+        style={
+          {
+            '--chat-width': `${chatWidth}px`,
+            '--chat-min': `${CHAT_WIDTH_MIN}px`,
+            '--chat-max': `${CHAT_WIDTH_MAX}px`,
+          } as React.CSSProperties
+        }
+      >
         {/* Coluna esquerda: header fixo + área do card com scroll */}
         <div className="card-detail-left">
           <header className="card-detail-header">
@@ -522,6 +583,22 @@ export function CardDetailPage() {
           </section>
           </div>
         </div>
+
+        {/* Resize handle */}
+        <div
+          className={`card-detail-chat-resize-handle ${isResizingChat ? 'is-resizing' : ''}`}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            setIsResizingChat(true)
+            resizeStartRef.current = { x: e.clientX, w: chatWidth }
+          }}
+          role="separator"
+          aria-orientation="vertical"
+          aria-valuenow={chatWidth}
+          aria-valuemin={CHAT_WIDTH_MIN}
+          aria-valuemax={CHAT_WIDTH_MAX}
+          aria-label="Redimensionar painel do chat"
+        />
 
         {/* Chat à direita - preenche a altura */}
         <aside ref={chatPanelRef} className="card-detail-ai card-detail-ai-chat">
