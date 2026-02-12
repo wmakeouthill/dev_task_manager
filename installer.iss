@@ -49,3 +49,25 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDi
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+function IsWebView2Installed: Boolean;
+var
+  Version: string;
+begin
+  Result := RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) or
+            RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) or
+            RegQueryStringValue(HKCU, 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version);
+  Result := Result and (Version <> '') and (Version <> '0.0.0.0');
+end;
+
+function InitializeSetup: Boolean;
+begin
+  Result := True;
+  if not IsWebView2Installed then
+    MsgBox('O Microsoft Edge WebView2 Runtime não está instalado.' + #13#10 + #13#10 +
+           'O Dev Task Manager precisa do WebView2 para funcionar.' + #13#10 + #13#10 +
+           'Após a instalação, baixe o WebView2 em:' + #13#10 +
+           'https://developer.microsoft.com/microsoft-edge/webview2/',
+           mbInformation, MB_OK);
+end;

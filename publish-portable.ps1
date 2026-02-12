@@ -45,15 +45,14 @@ Write-Host "`n[3/5] Publicando WebApi..." -ForegroundColor Yellow
 if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
 New-Item -ItemType Directory -Path $publishDir -Force | Out-Null
 
+# WebApi sem single-file: evita problemas de content root quando instalado em Program Files
 $webApiArgs = @(
     "publish",
     (Join-Path $root "src\WebApi\DevTaskManager.WebApi.csproj"),
     "-c", "Release",
     "-o", $publishDir,
     "-r", "win-x64",
-    "--self-contained", "true",
-    "-p:PublishSingleFile=true",
-    "-p:IncludeNativeLibrariesForSelfExtract=true"
+    "--self-contained", "true"
 )
 & dotnet $webApiArgs
 if ($LASTEXITCODE -ne 0) { throw "Publish WebApi falhou" }

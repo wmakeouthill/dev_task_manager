@@ -12,12 +12,19 @@ using DevTaskManager.WebApi.Endpoints;
 using DevTaskManager.WebApi.Middleware;
 using DotNetEnv;
 
+// Em modo publicado/single-file: content root deve ser a pasta do exe (onde estão wwwroot, appsettings)
+// Single-file extrai para temp - usamos o diretório do executável para encontrar wwwroot
+var exeDir = Path.GetDirectoryName(Environment.ProcessPath);
+var contentRoot = !string.IsNullOrEmpty(exeDir) && Directory.Exists(Path.Combine(exeDir, "wwwroot"))
+    ? exeDir
+    : Directory.GetCurrentDirectory();
+
 // Carrega .env do backend (src/WebApi ou raiz do repo)
-var currentDir = Directory.GetCurrentDirectory();
 var envPaths = new[]
 {
-    Path.Combine(currentDir, ".env"),
-    Path.Combine(currentDir, "src", "WebApi", ".env")
+    Path.Combine(contentRoot, ".env"),
+    Path.Combine(Directory.GetCurrentDirectory(), ".env"),
+    Path.Combine(Directory.GetCurrentDirectory(), "src", "WebApi", ".env")
 };
 foreach (var p in envPaths)
 {
@@ -28,7 +35,7 @@ foreach (var p in envPaths)
     }
 }
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions { ContentRootPath = contentRoot });
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -44,22 +51,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
 
-// Em Production: usa AppData para persistir dados entre reinstalações/upgrades
-var connFromConfig = builder.Configuration.GetConnectionString("DefaultConnection");
-var connectionString = connFromConfig;
-if (string.IsNullOrEmpty(connectionString))
+// Em Production: sempre usa AppData (instalado em Program Files não tem permissão de escrita)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (builder.Environment.IsProduction())
 {
-    if (builder.Environment.IsProduction())
-    {
-        var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var dbDir = Path.Combine(appData, "DevTaskManager");
-        Directory.CreateDirectory(dbDir);
-        connectionString = $"Data Source={Path.Combine(dbDir, "devtaskmanager.db")}";
-    }
-    else
-    {
-        connectionString = "Data Source=devtaskmanager.db";
-    }
+    var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+    var dbDir = Path.Combine(appData, "DevTaskManager");
+    Directory.CreateDirectory(dbDir);
+    connectionString = $"Data Source={Path.Combine(dbDir, "devtaskmanager.db")}";
+}
+else if (string.IsNullOrEmpty(connectionString))
+{
+    connectionString = "Data Source=devtaskmanager.db";
 }
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
