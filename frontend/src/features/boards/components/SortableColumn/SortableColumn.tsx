@@ -15,6 +15,7 @@ export function SortableColumn({ config }: Readonly<SortableColumnProps>) {
     onOpenCard,
     onSettings,
     createCardPending,
+    checklistByCardId,
   } = config
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -77,7 +78,12 @@ export function SortableColumn({ config }: Readonly<SortableColumnProps>) {
             <li className="loading-text">Carregando…</li>
           ) : (
             columnCards.map((card) => (
-              <SortableCard key={card.id} card={card} onOpen={onOpenCard} />
+              <SortableCard
+                key={card.id}
+                card={card}
+                onOpen={onOpenCard}
+                checklistItems={checklistByCardId?.[card.id]}
+              />
             ))
           )}
         </ul>

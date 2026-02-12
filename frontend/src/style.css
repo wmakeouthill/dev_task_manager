@@ -459,14 +459,14 @@ body {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-bottom: 8px;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
 .kanban-card {
-  padding: 12px 14px;
+  padding: 8px 12px;
   background: var(--bg-overlay);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
@@ -496,7 +496,7 @@ body {
 .kanban-card-meta {
   font-size: 0.75rem;
   color: var(--text-muted);
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .kanban-card-actions {
@@ -1594,13 +1594,130 @@ select:focus-visible {
 }
 
 .kanban-card-desc {
-  font-size: 0.75rem;
-  color: var(--text-muted);
   margin-top: 4px;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Markdown no card = mesma linguagem visual da tela de detalhe (card-detail-markdown), compacto */
+.kanban-card-desc-markdown {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.kanban-card-desc-markdown h1 {
+  margin: 0 0 2px 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.kanban-card-desc-markdown h2 {
+  margin: 2px 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.kanban-card-desc-markdown h3 {
+  margin: 2px 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.kanban-card-desc-markdown p {
+  margin: 0 0 4px 0;
+  color: var(--text-secondary);
+}
+
+.kanban-card-desc-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.kanban-card-desc-markdown strong {
+  font-weight: 600;
+}
+
+.kanban-card-desc-markdown code {
+  background: var(--bg-active);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.kanban-card-desc-markdown pre {
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  overflow-x: auto;
+  margin: 2px 0;
+}
+
+.kanban-card-desc-markdown pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.kanban-card-desc-markdown ul,
+.kanban-card-desc-markdown ol {
+  padding-left: 16px;
+  margin: 0 0 4px 0;
+  color: var(--text-secondary);
+}
+
+.kanban-card-desc-markdown li {
+  margin: 0;
+}
+
+.kanban-card-desc-markdown blockquote {
+  border-left: 3px solid var(--accent);
+  margin: 2px 0;
+  padding: 2px 0 2px 8px;
+  color: var(--text-secondary);
+  font-size: 0.875em;
+}
+
+.kanban-card-desc-markdown blockquote p {
+  margin: 0;
+  color: inherit;
+}
+
+.kanban-card-subtasks {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.kanban-card-subtask {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 1px;
+}
+
+.kanban-card-subtask-icon {
+  flex-shrink: 0;
+}
+
+.kanban-card-subtask-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kanban-card-subtask-more {
+  margin-top: 2px;
+  font-style: italic;
+  color: var(--text-muted);
 }
 
 .kanban-card-due {

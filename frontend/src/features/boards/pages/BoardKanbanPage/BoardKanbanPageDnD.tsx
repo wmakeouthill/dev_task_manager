@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useQueries } from '@tanstack/react-query'
 import {
   DndContext,
   DragOverlay,
+  pointerWithin,
   closestCorners,
   KeyboardSensor,
   PointerSensor,
@@ -10,6 +12,7 @@ import {
   useSensors,
   type DragStartEvent,
   type DragEndEvent,
+  type CollisionDetection,
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -17,11 +20,20 @@ import {
 } from '@dnd-kit/sortable'
 import { useBoard, useAddColumn, useUpdateColumn, useMoveColumn, useDeleteColumn } from '@/features/boards'
 import { useCards, useCreateCard, useMoveCard } from '@/features/cards'
+import { checklistApi } from '@/features/cards/api/cardExtrasApi'
+import type { ChecklistItemData } from '@/shared/types'
 import { ColumnSettingsModal } from '@/features/boards/components/ColumnSettingsModal'
 import { SortableColumn } from '@/features/boards/components/SortableColumn'
 import type { ColumnDto } from '@/features/boards/types/board.types'
 import type { Card } from '@/features/cards/types/card.types'
 import type { UpdateColumnRequest } from '@/features/boards/api/columnApi'
+
+/** Onde o cursor está = onde solta. Fallback para teclado. */
+const kanbanCollisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args)
+  if (pointerCollisions.length > 0) return pointerCollisions
+  return closestCorners(args)
+}
 
 function KanbanDragOverlayContent({
   activeCard,
@@ -69,6 +81,23 @@ export function BoardKanbanPage() {
 
   const columns: ColumnDto[] = board?.columns ?? []
   const cards = cardsData?.content ?? []
+
+  const checklistQueries = useQueries({
+    queries: cards.map((c) => ({
+      queryKey: ['checklist', c.id] as const,
+      queryFn: () => checklistApi.listar(c.id),
+      enabled: !!c.id,
+    })),
+  })
+
+  const checklistByCardId = useMemo(() => {
+    const m: Record<string, ChecklistItemData[]> = {}
+    cards.forEach((c, i) => {
+      const data = checklistQueries[i]?.data
+      if (Array.isArray(data)) m[c.id] = data
+    })
+    return m
+  }, [cards, checklistQueries])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -196,7 +225,7 @@ export function BoardKanbanPage() {
 
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={kanbanCollisionDetection}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
@@ -225,6 +254,7 @@ export function BoardKanbanPage() {
                       onOpenCard: (id) => navigate(`/cards/${id}`),
                       onSettings: setEditingColumn,
                       createCardPending: createCard.isPending,
+                      checklistByCardId,
                     }}
                   />
                 )
