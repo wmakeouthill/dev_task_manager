@@ -240,7 +240,7 @@ export function HomePage() {
                 disabled={aiAction.isPending}
                 onClick={() => {
                   aiAction.mutate(
-                    { action: 'daily-insights', cardId: 'global' },
+                    { action: 'daily-insights', cardId: '00000000-0000-0000-0000-000000000000' },
                     { onSuccess: (res) => setDailyInsight(res.content) }
                   )
                 }}

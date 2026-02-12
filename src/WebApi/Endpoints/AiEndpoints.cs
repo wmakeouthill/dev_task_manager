@@ -35,6 +35,18 @@ public static class AiEndpoints
         .WithName("AiChat")
         .WithSummary("Chat IA contextual do card com sugestões de descrição e subtarefas")
         .Produces<AiChatResponse>();
+
+        group.MapPost("/insights/per-card", async (PerCardInsightRequest request, AiActionService service,
+            AiProviderFactory providerFactory, IAiProvider defaultProvider,
+            HttpContext http, CancellationToken ct) =>
+        {
+            var provider = ResolveProvider(http, providerFactory, defaultProvider);
+            var response = await service.ExecutePerCardAsync(request.Action, provider, ct);
+            return Results.Ok(response);
+        })
+        .WithName("AiPerCardInsights")
+        .WithSummary("Gera um insight individual por card com AI habilitada")
+        .Produces<PerCardInsightsResponse>();
     }
 
     private static IAiProvider ResolveProvider(HttpContext http, AiProviderFactory factory, IAiProvider fallback)

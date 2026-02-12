@@ -41,6 +41,23 @@ export interface AiActionResponse {
     durationMs: number
 }
 
+/** Resultado de insight individual por card */
+export interface CardInsightResult {
+    cardId: string
+    cardTitle: string
+    status: string
+    content: string
+    provider: string
+    durationMs: number
+}
+
+/** Response do endpoint de insights por card */
+export interface PerCardInsightsResponse {
+    insights: CardInsightResult[]
+    totalCards: number
+    totalDurationMs: number
+}
+
 /** Mensagem no histórico de chat IA */
 export interface AiChatMessage {
     role: 'user' | 'assistant'

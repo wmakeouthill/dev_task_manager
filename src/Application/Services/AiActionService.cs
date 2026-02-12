@@ -67,4 +67,42 @@ public class AiActionService(ICardRepository cardRepo, IChecklistItemRepository 
 
         return new AiActionResponse(response.Content, response.Provider, sw.Elapsed.TotalMilliseconds);
     }
+
+    public async Task<PerCardInsightsResponse> ExecutePerCardAsync(string action, IAiProvider aiProvider, CancellationToken ct)
+    {
+        var cards = await cardRepo.ListAiEnabledAsync(ct);
+        if (cards.Count == 0)
+            return new PerCardInsightsResponse([], 0, 0);
+
+        var totalSw = Stopwatch.StartNew();
+        var results = new List<CardInsightResult>();
+
+        foreach (var card in cards)
+        {
+            var checklist = await checklistRepo.ListByCardAsync(card.Id, ct);
+            var checklistTexts = checklist.Select(c => $"[{(c.Concluido ? "x" : " ")}] {c.Texto}").ToList();
+
+            var aiRequest = new AiRequest(
+                action,
+                card.Titulo,
+                card.Descricao,
+                card.Status.ToString(),
+                checklistTexts);
+
+            var sw = Stopwatch.StartNew();
+            var response = await aiProvider.ExecuteAsync(aiRequest, ct);
+            sw.Stop();
+
+            results.Add(new CardInsightResult(
+                card.Id,
+                card.Titulo,
+                card.Status.ToString(),
+                response.Content,
+                response.Provider,
+                sw.Elapsed.TotalMilliseconds));
+        }
+
+        totalSw.Stop();
+        return new PerCardInsightsResponse(results, cards.Count, totalSw.Elapsed.TotalMilliseconds);
+    }
 }
