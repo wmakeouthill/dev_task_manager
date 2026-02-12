@@ -3752,3 +3752,142 @@ select:focus-visible {
   opacity: 1;
 }
 
+/* ===== Chat Markdown: headings menores como na área de descrição ===== */
+.card-detail-ai-chat-msg-content h1,
+.card-detail-ai-chat-msg-content h2,
+.card-detail-ai-chat-msg-content h3,
+.card-detail-ai-chat-msg-content h4,
+.card-detail-ai-chat-msg-content h5,
+.card-detail-ai-chat-msg-content h6,
+.ai-suggestion-card-preview h1,
+.ai-suggestion-card-preview h2,
+.ai-suggestion-card-preview h3,
+.ai-suggestion-card-preview h4,
+.ai-suggestion-card-preview h5,
+.ai-suggestion-card-preview h6 {
+  font-size: inherit;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+.card-detail-ai-chat-msg-content h1,
+.ai-suggestion-card-preview h1 {
+  font-size: 1.04rem;
+  font-weight: 700;
+  margin: 8px 0 4px;
+}
+.card-detail-ai-chat-msg-content h1:first-child,
+.ai-suggestion-card-preview h1:first-child {
+  margin-top: 0;
+}
+.card-detail-ai-chat-msg-content h2,
+.ai-suggestion-card-preview h2 {
+  font-size: 1.03rem;
+  font-weight: 700;
+  margin: 6px 0 4px;
+}
+.card-detail-ai-chat-msg-content h3,
+.ai-suggestion-card-preview h3 {
+  font-size: 1.02rem;
+  font-weight: 600;
+  margin: 6px 0 4px;
+}
+.card-detail-ai-chat-msg-content h4,
+.card-detail-ai-chat-msg-content h5,
+.card-detail-ai-chat-msg-content h6,
+.ai-suggestion-card-preview h4,
+.ai-suggestion-card-preview h5,
+.ai-suggestion-card-preview h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 4px 0 4px;
+}
+.card-detail-ai-chat-msg-content ul,
+.card-detail-ai-chat-msg-content ol {
+  padding-left: 20px;
+  margin: 4px 0;
+}
+.card-detail-ai-chat-msg-content code {
+  background: var(--bg-active);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+/* ===== Inline AI Suggestion Preview (na área de descrição e subtarefas) ===== */
+.ai-inline-preview {
+  margin-top: 12px;
+  border: 1px solid var(--accent-muted);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  overflow: hidden;
+  animation: aiPreviewSlideIn 0.25s ease-out;
+}
+
+@keyframes aiPreviewSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-inline-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.ai-inline-preview-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.ai-inline-preview-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ai-inline-preview-content {
+  cursor: default;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.ai-inline-preview-content:hover {
+  border-color: var(--border-subtle);
+}
+
+/* Subtarefas inline */
+.ai-inline-subtask-list {
+  list-style: none;
+  padding: 8px 12px;
+  margin: 0;
+}
+
+.ai-inline-subtask-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.ai-inline-subtask-item:last-child {
+  border-bottom: none;
+}
+
+.ai-inline-subtask-checkbox {
+  color: var(--accent);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}

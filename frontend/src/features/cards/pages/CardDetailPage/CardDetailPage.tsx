@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { MarkdownWithCode } from '@/shared/components/MarkdownWithCode'
 import { useCard, useUpdateCard, useUpdateCardStatus, useDeleteCard } from '@/features/cards/api/useCardActions'
@@ -8,7 +8,7 @@ import {
 } from '@/features/cards/api/useCardExtras'
 import { SubtaskModal } from '@/features/cards/components/SubtaskModal'
 import { BlockNoteDescriptionEditor } from '@/features/cards/components/BlockNoteDescriptionEditor'
-import { ChatPanel } from '@/features/cards/components/ChatPanel'
+import { ChatPanel, type ChatPanelHandle, type PendingSuggestion } from '@/features/cards/components/ChatPanel'
 import type { ChecklistItemData } from '@/shared/types'
 
 export function CardDetailPage() {
@@ -33,8 +33,18 @@ export function CardDetailPage() {
   const [titleInput, setTitleInput] = useState('')
   const [newComment, setNewComment] = useState('')
   const [newCheckItem, setNewCheckItem] = useState('')
+  const chatPanelHandleRef = useRef<ChatPanelHandle>(null)
   const chatPanelRef = useRef<HTMLElement>(null)
   const layoutRef = useRef<HTMLDivElement>(null)
+
+  // Sugestões pendentes vindas do chat (para preview inline)
+  const [pendingSuggestions, setPendingSuggestions] = useState<PendingSuggestion[]>([])
+  const pendingDescription = pendingSuggestions.find((s) => s.suggestion.type === 'description')
+  const pendingSubtasks = pendingSuggestions.find((s) => s.suggestion.type === 'subtasks')
+
+  const handlePendingSuggestionsChange = useCallback((suggestions: PendingSuggestion[]) => {
+    setPendingSuggestions(suggestions)
+  }, [])
 
   const CHAT_WIDTH_MIN = 280
   const CHAT_WIDTH_MAX = 560
@@ -174,6 +184,32 @@ export function CardDetailPage() {
     items.forEach((texto, i) => {
       addChecklistItem.mutate({ texto, ordem: currentLen + i })
     })
+  }
+
+  /** Aceitar descrição sugerida inline (preview na seção de descrição) */
+  const handleInlineAcceptDescription = () => {
+    if (!pendingDescription) return
+    handleAcceptDescription(pendingDescription.suggestion.content)
+    chatPanelHandleRef.current?.dismissSuggestion(pendingDescription.msgId, pendingDescription.suggestionIndex)
+  }
+
+  /** Rejeitar descrição sugerida inline */
+  const handleInlineRejectDescription = () => {
+    if (!pendingDescription) return
+    chatPanelHandleRef.current?.dismissSuggestion(pendingDescription.msgId, pendingDescription.suggestionIndex)
+  }
+
+  /** Aceitar subtarefas sugeridas inline (preview na seção de subtarefas) */
+  const handleInlineAcceptSubtasks = () => {
+    if (!pendingSubtasks?.suggestion.subtaskItems?.length) return
+    handleAcceptSubtasks(pendingSubtasks.suggestion.subtaskItems)
+    chatPanelHandleRef.current?.dismissSuggestion(pendingSubtasks.msgId, pendingSubtasks.suggestionIndex)
+  }
+
+  /** Rejeitar subtarefas sugeridas inline */
+  const handleInlineRejectSubtasks = () => {
+    if (!pendingSubtasks) return
+    chatPanelHandleRef.current?.dismissSuggestion(pendingSubtasks.msgId, pendingSubtasks.suggestionIndex)
   }
 
   return (
@@ -323,6 +359,26 @@ export function CardDetailPage() {
                 )}
               </div>
             )}
+
+            {/* Preview inline da descrição sugerida pela IA */}
+            {pendingDescription && !editingDesc && (
+              <div className="ai-inline-preview ai-inline-preview--description">
+                <div className="ai-inline-preview-header">
+                  <span className="ai-inline-preview-label">🤖 Descrição sugerida pela IA</span>
+                  <div className="ai-inline-preview-actions">
+                    <button type="button" className="btn btn-primary btn-sm" onClick={handleInlineAcceptDescription}>
+                      ✓ Aceitar
+                    </button>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={handleInlineRejectDescription}>
+                      ✕ Rejeitar
+                    </button>
+                  </div>
+                </div>
+                <div className="ai-inline-preview-content card-detail-markdown">
+                  <MarkdownWithCode>{pendingDescription.suggestion.content}</MarkdownWithCode>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Checklist / Subtasks */}
@@ -387,6 +443,31 @@ export function CardDetailPage() {
                 +
               </button>
             </form>
+
+            {/* Preview inline das subtarefas sugeridas pela IA */}
+            {pendingSubtasks && pendingSubtasks.suggestion.subtaskItems?.length && (
+              <div className="ai-inline-preview ai-inline-preview--subtasks">
+                <div className="ai-inline-preview-header">
+                  <span className="ai-inline-preview-label">🤖 Subtarefas sugeridas pela IA</span>
+                  <div className="ai-inline-preview-actions">
+                    <button type="button" className="btn btn-primary btn-sm" onClick={handleInlineAcceptSubtasks}>
+                      ✓ Aceitar
+                    </button>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={handleInlineRejectSubtasks}>
+                      ✕ Rejeitar
+                    </button>
+                  </div>
+                </div>
+                <ul className="ai-inline-subtask-list">
+                  {pendingSubtasks.suggestion.subtaskItems.map((item, i) => (
+                    <li key={i} className="ai-inline-subtask-item">
+                      <span className="ai-inline-subtask-checkbox">☐</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </section>
 
           {/* Comments */}
@@ -462,9 +543,11 @@ export function CardDetailPage() {
         {/* Chat à direita - preenche a altura */}
         <aside ref={chatPanelRef} className="card-detail-ai card-detail-ai-chat">
           <ChatPanel
+            ref={chatPanelHandleRef}
             cardId={card.id}
             onAcceptDescription={handleAcceptDescription}
             onAcceptSubtasks={handleAcceptSubtasks}
+            onPendingSuggestionsChange={handlePendingSuggestionsChange}
           />
         </aside>
       </div>

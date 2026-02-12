@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
 import { MarkdownWithCode } from '@/shared/components/MarkdownWithCode'
 import { useAiChat } from '@/features/ai'
 import { AiSuggestionCard } from '@/features/cards/components/AiSuggestionCard'
@@ -14,21 +14,39 @@ import {
     type PersistedChatMessage,
     type ChatConversation,
 } from '@/shared/services/chatStorageService'
-import type { AiChatMessage, CardSearchResult } from '@/shared/types'
+import type { AiChatMessage, AiSuggestion, CardSearchResult } from '@/shared/types'
 
 type ChatMessage = PersistedChatMessage
+
+/** Sugestão pendente com referência ao msgId para remoção */
+export interface PendingSuggestion {
+    msgId: string
+    suggestionIndex: number
+    suggestion: AiSuggestion
+}
 
 interface ChatPanelProps {
     cardId: string
     onAcceptDescription: (markdown: string) => void
     onAcceptSubtasks: (items: string[]) => void
+    /** Chamado sempre que as sugestões pendentes mudam (para preview inline) */
+    onPendingSuggestionsChange?: (suggestions: PendingSuggestion[]) => void
+}
+
+/** Handle exposto via ref para o componente pai */
+export interface ChatPanelHandle {
+    /** Remove uma sugestão do chat (chamado pelo pai ao aceitar/rejeitar no preview inline) */
+    dismissSuggestion: (msgId: string, suggestionIndex: number) => void
 }
 
 /**
  * Painel de chat IA com persistência de conversas em localStorage.
  * Botões de "nova conversa" e "histórico" no header (estilo Cursor).
  */
-export function ChatPanel({ cardId, onAcceptDescription, onAcceptSubtasks }: ChatPanelProps) {
+export const ChatPanel = forwardRef<ChatPanelHandle, ChatPanelProps>(function ChatPanel(
+    { cardId, onAcceptDescription, onAcceptSubtasks, onPendingSuggestionsChange },
+    ref
+) {
     const aiChat = useAiChat()
 
     // Conversa atual
@@ -47,6 +65,22 @@ export function ChatPanel({ cardId, onAcceptDescription, onAcceptSubtasks }: Cha
     const [showSlashMenu, setShowSlashMenu] = useState(false)
     const [slashSearch, setSlashSearch] = useState('')
     const [slashMenuPos, setSlashMenuPos] = useState({ top: 0, left: 0 })
+
+    /** Função interna para remover uma sugestão pelo msgId + index */
+    const removeSuggestion = useCallback((msgId: string, suggestionIndex: number) => {
+        setChatMessages((prev) =>
+            prev.map((m) => {
+                if (m.id !== msgId || !m.suggestions) return m
+                const updated = m.suggestions.filter((_, i) => i !== suggestionIndex)
+                return { ...m, suggestions: updated.length > 0 ? updated : undefined }
+            })
+        )
+    }, [])
+
+    // Expor handle para o pai
+    useImperativeHandle(ref, () => ({
+        dismissSuggestion: removeSuggestion,
+    }), [removeSuggestion])
 
     // Carregar ou criar conversa ao montar / trocar cardId
     useEffect(() => {
@@ -82,6 +116,20 @@ export function ChatPanel({ cardId, onAcceptDescription, onAcceptSubtasks }: Cha
         updateConversation(conversationId, chatMessages, title)
         setConversations(listConversations(cardId))
     }, [chatMessages, conversationId, cardId])
+
+    // Propagar sugestões pendentes para o componente pai (preview inline)
+    useEffect(() => {
+        if (!onPendingSuggestionsChange) return
+        const pending: PendingSuggestion[] = []
+        for (const msg of chatMessages) {
+            if (msg.suggestions) {
+                msg.suggestions.forEach((suggestion, idx) => {
+                    pending.push({ msgId: msg.id, suggestionIndex: idx, suggestion })
+                })
+            }
+        }
+        onPendingSuggestionsChange(pending)
+    }, [chatMessages, onPendingSuggestionsChange])
 
     useEffect(() => {
         resizeTextarea(chatTextareaRef.current)
@@ -156,25 +204,12 @@ export function ChatPanel({ cardId, onAcceptDescription, onAcceptSubtasks }: Cha
         } else if (suggestion.type === 'subtasks' && suggestion.subtaskItems?.length) {
             onAcceptSubtasks(suggestion.subtaskItems)
         }
-        // Remove apenas a sugestão aceita da lista
-        setChatMessages((prev) =>
-            prev.map((m) => {
-                if (m.id !== msg.id || !m.suggestions) return m
-                const updated = m.suggestions.filter((_, i) => i !== suggestionIndex)
-                return { ...m, suggestions: updated.length > 0 ? updated : undefined }
-            })
-        )
+        removeSuggestion(msg.id, suggestionIndex)
     }
 
     /** Rejeitar uma sugestão específica pelo índice */
     const handleRejectSuggestion = (msgId: string, suggestionIndex: number) => {
-        setChatMessages((prev) =>
-            prev.map((m) => {
-                if (m.id !== msgId || !m.suggestions) return m
-                const updated = m.suggestions.filter((_, i) => i !== suggestionIndex)
-                return { ...m, suggestions: updated.length > 0 ? updated : undefined }
-            })
-        )
+        removeSuggestion(msgId, suggestionIndex)
     }
 
     /** Iniciar nova conversa */
@@ -417,4 +452,4 @@ export function ChatPanel({ cardId, onAcceptDescription, onAcceptSubtasks }: Cha
             )}
         </>
     )
-}
+})

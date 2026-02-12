@@ -1,1 +1,1 @@
-export { ChatPanel } from './ChatPanel'
+export { ChatPanel, type ChatPanelHandle, type PendingSuggestion } from './ChatPanel'

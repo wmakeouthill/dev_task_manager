@@ -129,11 +129,24 @@ public class AiChatService(ICardRepository cardRepo, IChecklistItemRepository ch
         sb.AppendLine();
         sb.AppendLine("# Suas capacidades");
         sb.AppendLine("Você pode ajudar o desenvolvedor com:");
-        sb.AppendLine("- Criar ou melhorar a **descrição** do card (critérios de aceite, contexto técnico, requisitos)");
-        sb.AppendLine("- Sugerir **subtarefas** (breakdown técnico, checklist de implementação)");
+        sb.AppendLine("- **Criar** uma descrição do zero quando o card ainda não tem descrição");
+        sb.AppendLine("- **Editar/melhorar/reformatar** a descrição existente conforme o pedido do usuário (ex: \"melhore a descrição\", \"adicione critérios de aceite\", \"formate melhor\")");
+        sb.AppendLine("- **Criar** subtarefas do zero (breakdown técnico, checklist de implementação)");
+        sb.AppendLine("- **Complementar** subtarefas existentes com novas (sem repetir as que já existem)");
         sb.AppendLine("- Analisar a tarefa e dar **dicas de implementação**, riscos ou dependências");
         sb.AppendLine("- Comparar com cards referenciados para identificar relações ou duplicidades");
         sb.AppendLine("- Responder perguntas gerais sobre a tarefa, boas práticas ou arquitetura");
+        sb.AppendLine();
+
+        // ── Autonomia nas sugestões ──
+        sb.AppendLine("# Autonomia nas sugestões");
+        sb.AppendLine("Você deve usar os delimitadores de forma **autônoma e inteligente** conforme o pedido:");
+        sb.AppendLine("- Se o usuário pedir APENAS subtarefas → use APENAS <<<SUBTAREFAS>>>, NÃO inclua <<<DESCRICAO>>>");
+        sb.AppendLine("- Se o usuário pedir APENAS descrição → use APENAS <<<DESCRICAO>>>, NÃO inclua <<<SUBTAREFAS>>>");
+        sb.AppendLine("- Se o usuário pedir AMBOS (ex: \"me ajude com descrição e subtarefas\") → inclua AMBOS os blocos");
+        sb.AppendLine("- Se o pedido for ambíguo (ex: \"me ajude com esse card\") e faz sentido sugerir ambos, inclua ambos");
+        sb.AppendLine("- Se o usuário pedir para EDITAR/MELHORAR algo que já existe, gere a versão melhorada completa dentro do delimitador apropriado");
+        sb.AppendLine("- Quando editar uma descrição existente, envie a descrição COMPLETA (não apenas o diff) no bloco <<<DESCRICAO>>>");
         sb.AppendLine();
 
         // ── Regras de formatação (delimitadores) ──
@@ -160,11 +173,13 @@ public class AiChatService(ICardRepository cardRepo, IChecklistItemRepository ch
         sb.AppendLine();
         sb.AppendLine("## Regras importantes");
         sb.AppendLine("- Use os delimitadores SOMENTE quando estiver sugerindo conteúdo aplicável (descrição ou subtarefas).");
-        sb.AppendLine("- Você PODE incluir ambos <<<DESCRICAO>>> e <<<SUBTAREFAS>>> na MESMA resposta.");
+        sb.AppendLine("- Você PODE incluir ambos <<<DESCRICAO>>> e <<<SUBTAREFAS>>> na MESMA resposta quando fizer sentido.");
         sb.AppendLine("- Fora dos blocos delimitados, escreva normalmente explicando o que está sugerindo e por quê.");
         sb.AppendLine("- Se o usuário apenas fizer uma pergunta (sem pedir sugestão de conteúdo), converse normalmente SEM usar delimitadores.");
         sb.AppendLine("- Sempre leve em conta o contexto do card (título, descrição existente, subtarefas existentes, coluna) ao gerar sugestões.");
-        sb.AppendLine("- Não repita subtarefas que já existem no card.");
+        sb.AppendLine("- Não repita subtarefas que já existem no card — adicione apenas novas.");
+        sb.AppendLine("- Ao editar uma descrição existente, retorne a descrição COMPLETA reformulada (o sistema substitui a anterior).");
+        sb.AppendLine("- Ao sugerir subtarefas complementares, liste apenas as NOVAS (o sistema adiciona às existentes).");
 
         return sb.ToString();
     }
