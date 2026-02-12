@@ -1,0 +1,77 @@
+/* Integra o BlockNote com o tema escuro do app */
+.blocknote-desc-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.blocknote-desc-editor-inner {
+  background: var(--bg-raised);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  min-height: 140px;
+  overflow: hidden;
+}
+
+.blocknote-desc-editor-inner .bn-container {
+  --bn-colors-editor-text: var(--text-primary);
+  --bn-colors-editor-background: var(--bg-raised);
+  --bn-colors-menu-text: var(--text-primary);
+  --bn-colors-menu-background: var(--bg-overlay);
+  --bn-colors-tooltip-text: var(--text-primary);
+  --bn-colors-tooltip-background: var(--bg-overlay);
+  --bn-colors-hovered-text: var(--text-primary);
+  --bn-colors-hovered-background: var(--bg-hover);
+  --bn-colors-selected-text: #fff;
+  --bn-colors-selected-background: var(--accent);
+  --bn-colors-border: var(--border-default);
+  --bn-colors-shadow: rgba(0, 0, 0, 0.4);
+}
+
+.blocknote-desc-editor-inner .bn-editor {
+  min-height: 120px;
+  padding: 12px;
+}
+
+.blocknote-desc-editor-inner .bn-block-content {
+  font-size: 0.9375rem;
+}
+
+/* Títulos próximos ao tamanho normal, h1 > h2 > h3 com pouca variação (h1 não gigante) */
+.blocknote-desc-editor-inner [data-content-type="heading"] {
+  --level: 1.04rem;
+}
+.blocknote-desc-editor-inner [data-content-type="heading"][data-level="2"] {
+  --level: 1.03rem;
+}
+.blocknote-desc-editor-inner [data-content-type="heading"][data-level="3"] {
+  --level: 1.02rem;
+}
+.blocknote-desc-editor-inner [data-content-type="heading"][data-level="4"] {
+  --level: 1.01rem;
+}
+.blocknote-desc-editor-inner [data-content-type="heading"][data-level="5"],
+.blocknote-desc-editor-inner [data-content-type="heading"][data-level="6"] {
+  --level: 1rem;
+}
+.blocknote-desc-editor-inner [data-prev-level="1"] {
+  --prev-level: 1.04rem;
+}
+.blocknote-desc-editor-inner [data-prev-level="2"] {
+  --prev-level: 1.03rem;
+}
+.blocknote-desc-editor-inner [data-prev-level="3"] {
+  --prev-level: 1.02rem;
+}
+.blocknote-desc-editor-inner [data-prev-level="4"] {
+  --prev-level: 1.01rem;
+}
+.blocknote-desc-editor-inner [data-prev-level="5"],
+.blocknote-desc-editor-inner [data-prev-level="6"] {
+  --prev-level: 1rem;
+}
+
+.blocknote-desc-editor-actions {
+  display: flex;
+  gap: 8px;
+}

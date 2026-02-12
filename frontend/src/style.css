@@ -1559,11 +1559,11 @@ select:focus-visible {
   font-style: italic;
 }
 
-/* Markdown rendered content — títulos compactos para o espaço da descrição */
+/* Markdown rendered content — títulos próximos ao tamanho normal, h1 > h2 > h3 com pouca variação */
 .card-detail-markdown h1 {
-  margin-top: 14px;
-  margin-bottom: 6px;
-  font-size: 1.15rem;
+  margin-top: 10px;
+  margin-bottom: 4px;
+  font-size: 1.04rem;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -1573,17 +1573,34 @@ select:focus-visible {
 }
 
 .card-detail-markdown h2 {
-  margin-top: 12px;
-  margin-bottom: 6px;
-  font-size: 1.05rem;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  font-size: 1.03rem;
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .card-detail-markdown h3 {
-  margin-top: 10px;
+  margin-top: 8px;
   margin-bottom: 4px;
-  font-size: 0.9875rem;
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-detail-markdown h4 {
+  margin-top: 6px;
+  margin-bottom: 4px;
+  font-size: 1.01rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-detail-markdown h5,
+.card-detail-markdown h6 {
+  margin-top: 6px;
+  margin-bottom: 4px;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
 }

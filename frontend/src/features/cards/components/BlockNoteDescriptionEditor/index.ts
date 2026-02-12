@@ -1,0 +1,1 @@
+export { BlockNoteDescriptionEditor } from './BlockNoteDescriptionEditor'
