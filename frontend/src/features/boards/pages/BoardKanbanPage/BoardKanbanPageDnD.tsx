@@ -197,30 +197,34 @@ export function BoardKanbanPage() {
   return (
     <div className="page kanban-page">
       <header className="kanban-header">
-        <button
-          type="button"
-          className="kanban-back-btn"
-          onClick={() => navigate('/boards')}
-          aria-label="Voltar para lista de boards"
-        >
-          <span className="kanban-back-icon" aria-hidden>←</span>
-          Voltar
-        </button>
-        <h1 className="kanban-page-title">{board.nome}</h1>
-        <span className="kanban-board-stats">
-          {cards.length} cards • {columns.length} colunas
-        </span>
-        <button
-          type="button"
-          className="btn btn-primary kanban-add-column-header-btn"
-          onClick={handleAddColumn}
-          disabled={addColumn.isPending}
-          aria-label="Adicionar nova coluna"
-          title="Adicionar coluna"
-        >
-          <span aria-hidden>+</span>
-          {addColumn.isPending ? 'Criando…' : 'Nova coluna'}
-        </button>
+        <div className="kanban-header-title-block">
+          <h1 className="kanban-page-title">{board.nome}</h1>
+          <span className="kanban-board-stats">
+            {cards.length} cards • {columns.length} colunas
+          </span>
+        </div>
+        <div className="kanban-header-actions">
+          <button
+            type="button"
+            className="btn btn-primary kanban-add-column-header-btn"
+            onClick={handleAddColumn}
+            disabled={addColumn.isPending}
+            aria-label="Adicionar nova coluna"
+            title="Adicionar coluna"
+          >
+            <span aria-hidden>+</span>
+            {addColumn.isPending ? 'Criando…' : 'Nova coluna'}
+          </button>
+          <button
+            type="button"
+            className="kanban-back-btn"
+            onClick={() => navigate('/boards')}
+            aria-label="Voltar para lista de boards"
+          >
+            <span className="kanban-back-icon" aria-hidden>←</span>
+            Voltar
+          </button>
+        </div>
       </header>
 
       <DndContext
