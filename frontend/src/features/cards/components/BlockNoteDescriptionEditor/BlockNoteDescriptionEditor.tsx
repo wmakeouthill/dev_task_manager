@@ -1,10 +1,18 @@
 import { useEffect, useRef } from 'react'
+import { BlockNoteSchema, createCodeBlockSpec } from '@blocknote/core'
 import { useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import { MantineProvider } from '@mantine/core'
+import { codeBlockOptions } from '@blocknote/code-block'
 import '@blocknote/core/fonts/inter.css'
 import '@blocknote/mantine/style.css'
 import './BlockNoteDescriptionEditor.css'
+
+const schema = BlockNoteSchema.create().extend({
+  blockSpecs: {
+    codeBlock: createCodeBlockSpec(codeBlockOptions),
+  },
+})
 
 interface BlockNoteDescriptionEditorProps {
   readonly initialMarkdown: string
@@ -19,7 +27,7 @@ export function BlockNoteDescriptionEditor({
   onCancel,
   disabled = false,
 }: BlockNoteDescriptionEditorProps) {
-  const editor = useCreateBlockNote()
+  const editor = useCreateBlockNote({ schema })
   const loadedRef = useRef(false)
 
   useEffect(() => {

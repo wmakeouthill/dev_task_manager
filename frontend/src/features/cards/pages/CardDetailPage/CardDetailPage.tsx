@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { MarkdownWithCode } from '@/shared/components/MarkdownWithCode'
 import { useCard, useUpdateCard, useUpdateCardStatus, useDeleteCard } from '@/features/cards/api/useCardActions'
 import {
   useComments, useAddComment, useDeleteComment,
@@ -323,9 +322,7 @@ export function CardDetailPage() {
                 tabIndex={0}
               >
                 {card.descricao ? (
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {card.descricao}
-                  </ReactMarkdown>
+                  <MarkdownWithCode>{card.descricao}</MarkdownWithCode>
                 ) : (
                   <p className="loading-text">Clique para adicionar descrição em Markdown... Digite / para formatação estilo Notion.</p>
                 )}
@@ -434,7 +431,7 @@ export function CardDetailPage() {
                   </span>
                   <span className="comment-sep"> : </span>
                   <span className="comment-body">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{c.texto}</ReactMarkdown>
+                    <MarkdownWithCode>{c.texto}</MarkdownWithCode>
                   </span>
                   <button
                     type="button"
@@ -500,7 +497,7 @@ export function CardDetailPage() {
                 <span className="card-detail-ai-chat-msg-role">{msg.role === 'user' ? 'Você' : 'IA'}</span>
                 <div className="card-detail-ai-chat-msg-content">
                   {msg.role === 'assistant' ? (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                    <MarkdownWithCode>{msg.content}</MarkdownWithCode>
                   ) : (
                     <p>{msg.content}</p>
                   )}

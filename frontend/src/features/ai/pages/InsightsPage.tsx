@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { MarkdownWithCode } from '@/shared/components/MarkdownWithCode'
 import { useAiAction } from '@/features/ai'
 import { useSettings } from '@/features/settings'
 
@@ -89,7 +88,7 @@ export function InsightsPage() {
         <section className="card">
           <h2 className="section-title">Resultado</h2>
           <div className="ai-result">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{insightResult}</ReactMarkdown>
+            <MarkdownWithCode>{insightResult}</MarkdownWithCode>
           </div>
         </section>
       )}

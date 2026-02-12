@@ -1,5 +1,4 @@
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { MarkdownWithCode } from '@/shared/components/MarkdownWithCode'
 
 interface CardDescriptionModalProps {
   titulo: string
@@ -36,7 +35,7 @@ export function CardDescriptionModal({ titulo, descricao, onClose }: Readonly<Ca
         </header>
         <div className="modal-body">
           <div className="card-detail-markdown">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{descricao}</ReactMarkdown>
+            <MarkdownWithCode>{descricao}</MarkdownWithCode>
           </div>
         </div>
       </div>

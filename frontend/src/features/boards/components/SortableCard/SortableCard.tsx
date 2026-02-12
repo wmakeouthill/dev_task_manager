@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { MarkdownWithCode } from '@/shared/components/MarkdownWithCode'
 import { CardDescriptionModal } from '@/features/boards/components/CardDescriptionModal/CardDescriptionModal'
 import { CardSubtasksModal } from '@/features/boards/components/CardSubtasksModal/CardSubtasksModal'
 import type { SortableCardProps } from './SortableCard.types'
@@ -88,7 +87,7 @@ export function SortableCard({ card, onOpen, checklistItems = [] }: Readonly<Sor
           title="Clique para ver descrição completa"
         >
           <span className="kanban-card-desc-markdown">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{card.descricao}</ReactMarkdown>
+            <MarkdownWithCode>{card.descricao}</MarkdownWithCode>
           </span>
         </button>
       ) : null}

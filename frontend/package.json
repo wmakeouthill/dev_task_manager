@@ -23,6 +23,7 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
+    "@blocknote/code-block": "^0.46.2",
     "@blocknote/core": "^0.46.2",
     "@blocknote/mantine": "^0.46.2",
     "@blocknote/react": "^0.46.2",
@@ -35,12 +36,14 @@
     "@mantine/utils": "^6.0.22",
     "@tanstack/react-query": "^5.90.20",
     "axios": "^1.13.5",
+    "prismjs": "^1.30.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-hook-form": "^7.71.1",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.13.0",
     "rehype-highlight": "^7.0.2",
+    "rehype-prism-plus": "^2.0.2",
     "remark-gfm": "^4.0.1",
     "zod": "^4.3.6",
     "zustand": "^5.0.11"

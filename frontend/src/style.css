@@ -1618,7 +1618,9 @@ select:focus-visible {
   font-size: 0.85em;
 }
 
-.card-detail-markdown pre {
+.card-detail-markdown pre,
+.kanban-card-desc-markdown pre,
+.ai-result pre {
   background: var(--bg-base);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
@@ -1626,9 +1628,18 @@ select:focus-visible {
   overflow-x: auto;
 }
 
-.card-detail-markdown pre code {
+.card-detail-markdown pre code,
+.kanban-card-desc-markdown pre code,
+.ai-result pre code {
   background: transparent;
   padding: 0;
+}
+
+/* Compatibilidade rehype-prism-plus com tema escuro */
+.card-detail-markdown pre[class*='language-'],
+.kanban-card-desc-markdown pre[class*='language-'],
+.ai-result pre[class*='language-'] {
+  background: #1d1d1d;
 }
 
 .card-detail-markdown ul,
