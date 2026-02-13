@@ -2,6 +2,7 @@ using DevTaskManager.Application.DTOs;
 using DevTaskManager.Application.Services;
 using DevTaskManager.Infrastructure.Ai;
 using DevTaskManager.Domain.Interfaces;
+using System.Text.Json;
 
 namespace DevTaskManager.WebApi.Endpoints;
 
@@ -47,6 +48,84 @@ public static class AiEndpoints
         .WithName("AiPerCardInsights")
         .WithSummary("Gera um insight individual por card com AI habilitada")
         .Produces<PerCardInsightsResponse>();
+
+        group.MapGet("/ollama/models", async (string? baseUrl, CancellationToken ct) =>
+        {
+            var endpoint = NormalizeBaseUrl(baseUrl);
+            using var http = new HttpClient { BaseAddress = new Uri(endpoint), Timeout = TimeSpan.FromSeconds(5) };
+
+            try
+            {
+                var installed = await FetchInstalledModelsAsync(http, ct);
+                var running = await FetchRunningModelsAsync(http, ct);
+
+                var merged = installed
+                    .Concat(running)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+                return Results.Ok(new
+                {
+                    baseUrl = endpoint,
+                    models = merged,
+                    runningModels = running,
+                    installedModels = installed
+                });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new
+                {
+                    message = $"Não foi possível consultar o Ollama em {endpoint}. {ex.Message}"
+                });
+            }
+        })
+        .WithName("ListOllamaModels")
+        .WithSummary("Lista modelos do Ollama local (instalados e em execução)");
+    }
+
+    private static string NormalizeBaseUrl(string? baseUrl)
+    {
+        var raw = string.IsNullOrWhiteSpace(baseUrl) ? "http://localhost:11434" : baseUrl.Trim();
+        return raw.TrimEnd('/');
+    }
+
+    private static async Task<string[]> FetchInstalledModelsAsync(HttpClient http, CancellationToken ct)
+    {
+        using var response = await http.GetAsync("/api/tags", ct);
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync(ct);
+        using var doc = JsonDocument.Parse(json);
+        if (!doc.RootElement.TryGetProperty("models", out var models) || models.ValueKind != JsonValueKind.Array)
+            return Array.Empty<string>();
+
+        return models
+            .EnumerateArray()
+            .Select(m => m.TryGetProperty("name", out var name) ? name.GetString() : null)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Cast<string>()
+            .ToArray();
+    }
+
+    private static async Task<string[]> FetchRunningModelsAsync(HttpClient http, CancellationToken ct)
+    {
+        using var response = await http.GetAsync("/api/ps", ct);
+        if (!response.IsSuccessStatusCode)
+            return Array.Empty<string>();
+
+        var json = await response.Content.ReadAsStringAsync(ct);
+        using var doc = JsonDocument.Parse(json);
+        if (!doc.RootElement.TryGetProperty("models", out var models) || models.ValueKind != JsonValueKind.Array)
+            return Array.Empty<string>();
+
+        return models
+            .EnumerateArray()
+            .Select(m => m.TryGetProperty("name", out var name) ? name.GetString() : null)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Cast<string>()
+            .ToArray();
     }
 
     private static IAiProvider ResolveProvider(HttpContext http, AiProviderFactory factory, IAiProvider fallback)

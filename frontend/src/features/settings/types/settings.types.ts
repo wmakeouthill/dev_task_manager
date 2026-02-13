@@ -43,8 +43,15 @@ export const MODEL_LABELS: Record<string, string> = {
     'gemini-1.5-pro': 'Gemini 1.5 Pro',
     'gemini-1.5-flash': 'Gemini 1.5 Flash',
     'llama3': 'Llama 3',
+    'llama3.1:8b': 'Llama 3.1 8B',
     'mistral': 'Mistral',
     'codellama': 'Code Llama',
+    'codellama:7b': 'Code Llama 7B',
+    'glm4:9b': 'GLM4 9B',
+    'qwen2.5-coder:7b': 'Qwen 2.5 Coder 7B',
+    'qwen2.5coder:7b': 'Qwen 2.5 Coder 7B',
+    'qwen3-coder:latest': 'Qwen3 Coder (latest)',
+    'quen3-coder:latest': 'Quen3 Coder (latest)',
 }
 
 export function getModelLabel(modelId: string): string {
@@ -55,7 +62,11 @@ export const AI_PROVIDERS = [
     { value: 'openai' as const, label: 'OpenAI', models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'] },
     { value: 'anthropic' as const, label: 'Anthropic', models: ['claude-sonnet-4-20250514', 'claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307'] },
     { value: 'gemini' as const, label: 'Google Gemini', models: ['gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash'] },
-    { value: 'ollama' as const, label: 'Ollama (Local)', models: ['llama3', 'mistral', 'codellama'] },
+    {
+        value: 'ollama' as const,
+        label: 'Ollama (Local)',
+        models: ['llama3.1:8b', 'codellama:7b', 'glm4:9b', 'qwen2.5-coder:7b', 'qwen3-coder:latest', 'quen3-coder:latest', 'llama3', 'mistral', 'codellama'],
+    },
 ] as const
 
 function createDefaultProviderConfig(provider: AiProviderType): AiProviderConfig {

@@ -5,6 +5,7 @@ export function ApiProviderCard({
     config,
     providerLabel,
     models,
+    runningModels = [],
     getModelLabel,
     onUpdate,
     onToggle,
@@ -69,19 +70,45 @@ export function ApiProviderCard({
                     <label className="label" htmlFor={`model-${config.provider}`}>
                         Modelo
                     </label>
-                    <select
-                        id={`model-${config.provider}`}
-                        className="select settings-select"
-                        value={config.model}
-                        onChange={(e) => onUpdate({ model: e.target.value })}
-                        disabled={!config.enabled}
-                    >
-                        {models.map((m) => (
-                            <option key={m} value={m}>
-                                {getModelLabel(m)}
-                            </option>
-                        ))}
-                    </select>
+                    {config.provider === 'ollama' ? (
+                        <>
+                            <select
+                                id={`model-${config.provider}`}
+                                className="select settings-select"
+                                value={config.model}
+                                onChange={(e) => onUpdate({ model: e.target.value })}
+                                disabled={!config.enabled}
+                            >
+                                {!models.includes(config.model) && config.model.trim() !== '' && (
+                                    <option value={config.model}>{config.model}</option>
+                                )}
+                                {models.map((m) => (
+                                    <option key={m} value={m}>
+                                        {getModelLabel(m)}
+                                    </option>
+                                ))}
+                            </select>
+                            {runningModels.length > 0 && (
+                                <p className="settings-hint" aria-live="polite">
+                                    Em execução agora: {runningModels.join(', ')}
+                                </p>
+                            )}
+                        </>
+                    ) : (
+                        <select
+                            id={`model-${config.provider}`}
+                            className="select settings-select"
+                            value={config.model}
+                            onChange={(e) => onUpdate({ model: e.target.value })}
+                            disabled={!config.enabled}
+                        >
+                            {models.map((m) => (
+                                <option key={m} value={m}>
+                                    {getModelLabel(m)}
+                                </option>
+                            ))}
+                        </select>
+                    )}
                 </div>
             </div>
 
