@@ -2,8 +2,7 @@ import type { UseCase } from '@/features/home/types';
 import { Button } from '@/shared/components/ui';
 import './Hero.css';
 
-/** Substitua pela URL real do download quando disponível */
-const DOWNLOAD_URL = '#download';
+const DOWNLOAD_URL = 'https://drive.google.com/file/d/1syPq-8qyrMdS3HM1oMd6XleqpEkF5WZF/view?usp=drive_link';
 
 interface HeroProps {
   useCase: UseCase;
@@ -27,11 +26,7 @@ export function Hero({
   onResume,
 }: HeroProps) {
   const handleDownload = () => {
-    if (DOWNLOAD_URL.startsWith('http')) {
-      window.open(DOWNLOAD_URL, '_blank', 'noopener,noreferrer');
-    } else {
-      document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' });
-    }
+    window.open(DOWNLOAD_URL, '_blank', 'noopener,noreferrer');
   };
 
   const handleConhecer = () => {

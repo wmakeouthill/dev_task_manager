@@ -16,22 +16,17 @@ npm run build
 npm run preview  # preview do build
 ```
 
+## Deploy (GitHub Pages)
+
+- Workflow em `.github/workflows/deploy-landing-page.yml`: dispara em push na `main` quando há mudanças em `landing-page/**`.
+- No repositório: **Settings → Pages → Source**: "GitHub Actions".
+- URL da landing: `https://<seu-user>.github.io/dev_task_manager/`
+- Múltiplas páginas (ex. `/dev_task_manager/como-usar`) funcionam: o build copia `index.html` para `404.html`, assim o GitHub Pages entrega o SPA em qualquer rota.
+
 ## Configuração
 
-1. **Link de download**  
-   Substitua `#download` (ou `DOWNLOAD_URL`) pela URL real nos arquivos:
-   - `src/shared/components/layout/Header/Header.tsx`
-   - `src/features/home/components/Hero/Hero.tsx`
-   - `src/features/home/components/Download/Download.tsx`
-   - `src/features/instructions/pages/InstructionsPage.tsx`
+1. **Screenshots (Como Usar)**  
+   Coloque as imagens em `public/prints/` e defina `imageSrc` em `src/features/instructions/hooks/useInstructions.ts` para cada passo (ex.: `dashboard.png`, `board-colunas.png`, etc.).
 
-2. **Screenshots (Como Usar)**  
-   Coloque as imagens em `public/prints/` e defina `imageSrc` em `src/features/instructions/hooks/useInstructions.ts` para cada passo, por exemplo:
-   - `dashboard.png` — tela inicial
-   - `board-colunas.png` — board Kanban
-   - `cards-detalhes.png` — cards e modal
-   - `subtarefas.png` — subtarefas
-   - `ia-sugestoes.png` — painel de IA
-
-3. **Deploy (ex.: GitHub Pages)**  
-   Em `vite.config.ts`, ajuste `base` para o path do repositório, ex.: `base: '/dev_task_manager/'`.
+2. **Link de download**  
+   Atualmente apontando para Google Drive. Para alterar, edite a constante `DOWNLOAD_URL` em: Header, Hero, Download, InstructionsPage e o link no Footer.

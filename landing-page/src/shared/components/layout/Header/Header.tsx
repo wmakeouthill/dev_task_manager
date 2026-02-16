@@ -8,8 +8,7 @@ const NAV_ITEMS = [
   { path: '/como-usar', label: 'Como Usar' },
 ];
 
-/** Substitua pela URL real do download (ex: GitHub Releases ou link direto) */
-const DOWNLOAD_URL = '#download';
+const DOWNLOAD_URL = 'https://drive.google.com/file/d/1syPq-8qyrMdS3HM1oMd6XleqpEkF5WZF/view?usp=drive_link';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -18,11 +17,7 @@ export function Header() {
   const toggleMenu = () => setIsMenuOpen((prev) => !prev);
 
   const handleDownload = () => {
-    if (DOWNLOAD_URL.startsWith('http')) {
-      window.open(DOWNLOAD_URL, '_blank', 'noopener,noreferrer');
-    } else {
-      document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' });
-    }
+    window.open(DOWNLOAD_URL, '_blank', 'noopener,noreferrer');
   };
 
   return (

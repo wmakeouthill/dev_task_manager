@@ -7,7 +7,7 @@ import '@/styles/index.css';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/dev_task_manager">
       <Header />
       <Routes>
         <Route path="/" element={<HomePage />} />

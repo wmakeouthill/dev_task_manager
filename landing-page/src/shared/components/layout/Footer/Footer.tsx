@@ -42,7 +42,13 @@ export function Footer() {
                   </a>
                 </li>
                 <li>
-                  <a href="#download">Download</a>
+                  <a
+                    href="https://drive.google.com/file/d/1syPq-8qyrMdS3HM1oMd6XleqpEkF5WZF/view?usp=drive_link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Download
+                  </a>
                 </li>
               </ul>
             </div>

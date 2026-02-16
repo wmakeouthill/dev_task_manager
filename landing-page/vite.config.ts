@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+// base para GitHub Pages (repo: dev_task_manager)
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -9,5 +10,5 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  base: '/',
+  base: '/dev_task_manager/',
 });

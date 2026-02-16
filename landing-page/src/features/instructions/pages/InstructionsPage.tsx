@@ -2,18 +2,13 @@ import { useInstructions } from '../hooks';
 import { Card, ImagePlaceholder, Button } from '@/shared/components/ui';
 import './InstructionsPage.css';
 
-/** Substitua pela URL real do download quando disponível */
-const DOWNLOAD_URL = '#download';
+const DOWNLOAD_URL = 'https://drive.google.com/file/d/1syPq-8qyrMdS3HM1oMd6XleqpEkF5WZF/view?usp=drive_link';
 
 export function InstructionsPage() {
   const { steps } = useInstructions();
 
   const handleDownload = () => {
-    if (DOWNLOAD_URL.startsWith('http')) {
-      window.open(DOWNLOAD_URL, '_blank', 'noopener,noreferrer');
-    } else {
-      document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' });
-    }
+    window.open(DOWNLOAD_URL, '_blank', 'noopener,noreferrer');
   };
 
   return (
