@@ -125,8 +125,8 @@
   height: 16px;
   background: linear-gradient(
     90deg,
-    rgba(99, 102, 241, 0.3) 0%,
-    rgba(99, 102, 241, 0.1) 100%
+    rgba(167, 139, 250, 0.25) 0%,
+    rgba(167, 139, 250, 0.08) 100%
   );
   border-radius: var(--radius-sm);
   animation: pulse 2s ease-in-out infinite;

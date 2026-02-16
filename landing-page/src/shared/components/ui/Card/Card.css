@@ -10,15 +10,15 @@
 }
 
 .card-glass {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(20, 20, 22, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .card-feature {
   background: var(--gradient-card);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(167, 139, 250, 0.15);
   position: relative;
   overflow: hidden;
 }

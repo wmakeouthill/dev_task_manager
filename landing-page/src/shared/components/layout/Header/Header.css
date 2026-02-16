@@ -28,8 +28,11 @@
   color: var(--color-text-primary);
 }
 
-.logo-icon {
-  font-size: var(--font-size-2xl);
+.logo-icon-img {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  object-fit: contain;
 }
 
 .logo-text {
@@ -89,8 +92,8 @@
 
 .header-badge {
   padding: var(--spacing-xs) var(--spacing-sm);
-  background: rgba(99, 102, 241, 0.2);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: rgba(167, 139, 250, 0.18);
+  border: 1px solid rgba(167, 139, 250, 0.25);
   border-radius: var(--radius-full);
   font-size: var(--font-size-xs);
   font-weight: 600;

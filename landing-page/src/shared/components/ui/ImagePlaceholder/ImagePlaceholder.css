@@ -28,7 +28,7 @@
 
 .image-placeholder:hover {
   border-color: var(--color-accent);
-  box-shadow: inset 0 0 40px rgba(99, 102, 241, 0.1);
+  box-shadow: inset 0 0 40px rgba(167, 139, 250, 0.08);
 }
 
 .placeholder-content {

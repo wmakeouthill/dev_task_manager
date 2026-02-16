@@ -29,7 +29,13 @@ export function Header() {
     <header className="header glass">
       <div className="header-container container">
         <Link to="/" className="logo">
-          <span className="logo-icon" aria-hidden>📋</span>
+          <img
+            src="/favicon.ico"
+            alt=""
+            className="logo-icon-img"
+            width={28}
+            height={28}
+          />
           <span className="logo-text">Dev Task Manager</span>
         </Link>
 
