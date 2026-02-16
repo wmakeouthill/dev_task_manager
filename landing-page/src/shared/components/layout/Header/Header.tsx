@@ -25,7 +25,7 @@ export function Header() {
       <div className="header-container container">
         <Link to="/" className="logo">
           <img
-            src="/favicon.ico"
+            src={`${import.meta.env.BASE_URL}favicon.ico`}
             alt=""
             className="logo-icon-img"
             width={28}
