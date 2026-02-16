@@ -55,6 +55,18 @@ export function HomePage() {
   const reminders = remindersData?.content?.filter((r) => r.status === 'Pending') ?? []
   const greeting = getGreeting()
 
+  const generateDailyInsight = () => {
+    aiAction.mutate(
+      { action: 'daily-insights', cardId: '00000000-0000-0000-0000-000000000000' },
+      {
+        onSuccess: (res) => {
+          setDailyInsight(res.content)
+          saveDailyInsight(res.content)
+        },
+      }
+    )
+  }
+
   if (isLoading) {
     return (
       <div className="page home-page">
@@ -312,9 +324,21 @@ export function HomePage() {
         <section className="card home-section home-section-ai-daily">
           <h2 className="section-title">🤖 Insight do Dia (IA)</h2>
           {dailyInsight ? (
-            <div className="ai-result">
-              <MarkdownWithCode>{dailyInsight}</MarkdownWithCode>
-            </div>
+            <>
+              <div className="ai-result">
+                <MarkdownWithCode>{dailyInsight}</MarkdownWithCode>
+              </div>
+              <div style={{ textAlign: 'center', paddingTop: 8 }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={aiAction.isPending}
+                  onClick={generateDailyInsight}
+                >
+                  {aiAction.isPending ? '⏳ Gerando…' : '🔄 Gerar novamente'}
+                </button>
+              </div>
+            </>
           ) : (
             <div style={{ textAlign: 'center', padding: '12px 0' }}>
               <p className="loading-text" style={{ marginBottom: 12 }}>
@@ -324,17 +348,7 @@ export function HomePage() {
                 type="button"
                 className="btn btn-secondary"
                 disabled={aiAction.isPending}
-                onClick={() => {
-                  aiAction.mutate(
-                    { action: 'daily-insights', cardId: '00000000-0000-0000-0000-000000000000' },
-                    {
-                      onSuccess: (res) => {
-                        setDailyInsight(res.content)
-                        saveDailyInsight(res.content)
-                      },
-                    }
-                  )
-                }}
+                onClick={generateDailyInsight}
               >
                 {aiAction.isPending ? '⏳ Gerando…' : '✨ Gerar insight do dia'}
               </button>

@@ -39,14 +39,13 @@ export function CardDetailPage() {
 
   // Sugestões pendentes vindas do chat (para preview inline)
   const [pendingSuggestions, setPendingSuggestions] = useState<PendingSuggestion[]>([])
-  /** Índices de subtarefas inline já aceitas/rejeitadas individualmente */
-  const [handledInlineSubtasks, setHandledInlineSubtasks] = useState<Set<number>>(new Set())
   const pendingDescription = pendingSuggestions.find((s) => s.suggestion.type === 'description')
-  const pendingSubtasks = pendingSuggestions.find((s) => s.suggestion.type === 'subtasks')
+  const pendingSubtasks = pendingSuggestions.filter(
+    (s) => s.suggestion.type === 'subtasks' && (s.suggestion.subtaskItems?.length ?? 0) > 0
+  )
 
   const handlePendingSuggestionsChange = useCallback((suggestions: PendingSuggestion[]) => {
     setPendingSuggestions(suggestions)
-    setHandledInlineSubtasks(new Set())
   }, [])
 
   const CHAT_WIDTH_MIN = 280
@@ -202,43 +201,22 @@ export function CardDetailPage() {
     chatPanelHandleRef.current?.dismissSuggestion(pendingDescription.msgId, pendingDescription.suggestionIndex)
   }
 
-  /** Aceitar subtarefas sugeridas inline (preview na seção de subtarefas) */
-  const handleInlineAcceptSubtasks = () => {
-    if (!pendingSubtasks?.suggestion.subtaskItems?.length) return
-    // Aceita apenas as que ainda não foram individualmente tratadas
-    const remaining = pendingSubtasks.suggestion.subtaskItems.filter((_, i) => !handledInlineSubtasks.has(i))
-    if (remaining.length > 0) handleAcceptSubtasks(remaining)
-    chatPanelHandleRef.current?.dismissSuggestion(pendingSubtasks.msgId, pendingSubtasks.suggestionIndex)
-    setHandledInlineSubtasks(new Set())
-  }
-
   /** Aceitar subtarefa individual inline */
-  const handleInlineAcceptSingleSubtask = (item: string, index: number) => {
+  const handleInlineAcceptSingleSubtask = (item: string, msgId: string, suggestionIndex: number) => {
     handleAcceptSubtasks([item])
-    const next = new Set(handledInlineSubtasks)
-    next.add(index)
-    setHandledInlineSubtasks(next)
-    if (pendingSubtasks?.suggestion.subtaskItems && next.size >= pendingSubtasks.suggestion.subtaskItems.length) {
-      chatPanelHandleRef.current?.dismissSuggestion(pendingSubtasks.msgId, pendingSubtasks.suggestionIndex)
-      setHandledInlineSubtasks(new Set())
-    }
+    chatPanelHandleRef.current?.dismissSuggestion(msgId, suggestionIndex)
   }
 
   /** Rejeitar subtarefa individual inline */
-  const handleInlineRejectSingleSubtask = (index: number) => {
-    const next = new Set(handledInlineSubtasks)
-    next.add(index)
-    setHandledInlineSubtasks(next)
-    if (pendingSubtasks?.suggestion.subtaskItems && next.size >= pendingSubtasks.suggestion.subtaskItems.length) {
-      chatPanelHandleRef.current?.dismissSuggestion(pendingSubtasks.msgId, pendingSubtasks.suggestionIndex)
-      setHandledInlineSubtasks(new Set())
-    }
+  const handleInlineRejectSingleSubtask = (msgId: string, suggestionIndex: number) => {
+    chatPanelHandleRef.current?.dismissSuggestion(msgId, suggestionIndex)
   }
 
   /** Rejeitar subtarefas sugeridas inline */
   const handleInlineRejectSubtasks = () => {
-    if (!pendingSubtasks) return
-    chatPanelHandleRef.current?.dismissSuggestion(pendingSubtasks.msgId, pendingSubtasks.suggestionIndex)
+    pendingSubtasks.forEach((pending) => {
+      chatPanelHandleRef.current?.dismissSuggestion(pending.msgId, pending.suggestionIndex)
+    })
   }
 
   return (
@@ -447,7 +425,9 @@ export function CardDetailPage() {
                     onClick={() => setSelectedSubtask(item)}
                     title="Clique para abrir detalhes"
                   >
-                    {item.texto}
+                    <span className="card-detail-markdown checklist-text-markdown">
+                      <MarkdownWithCode>{item.texto}</MarkdownWithCode>
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -474,49 +454,49 @@ export function CardDetailPage() {
             </form>
 
             {/* Preview inline das subtarefas sugeridas pela IA */}
-            {pendingSubtasks?.suggestion.subtaskItems?.length && (
+            {pendingSubtasks.length > 0 && (
               <div className="ai-inline-preview ai-inline-preview--subtasks">
                 <div className="ai-inline-preview-header">
                   <span className="ai-inline-preview-label">🤖 Subtarefas sugeridas pela IA</span>
                   <div className="ai-inline-preview-actions">
-                    <button type="button" className="btn btn-primary btn-sm" onClick={handleInlineAcceptSubtasks}>
-                      ✓ Aceitar todas ({(pendingSubtasks.suggestion.subtaskItems?.length ?? 0) - handledInlineSubtasks.size})
-                    </button>
                     <button type="button" className="btn btn-ghost btn-sm" onClick={handleInlineRejectSubtasks}>
                       ✕ Rejeitar todas
                     </button>
                   </div>
                 </div>
                 <ul className="ai-inline-subtask-list">
-                  {pendingSubtasks.suggestion.subtaskItems.map((item, i) => (
+                  {pendingSubtasks.map((pending, i) => {
+                    const item = pending.suggestion.subtaskItems?.[0] ?? pending.suggestion.content
+                    return (
                     <li
-                      key={i}
-                      className={`ai-inline-subtask-item${handledInlineSubtasks.has(i) ? ' ai-inline-subtask-item--handled' : ''}`}
+                      key={`${pending.msgId}-${pending.suggestionIndex}`}
+                      className="ai-inline-subtask-item"
                     >
                       <span className="ai-inline-subtask-number">{i + 1}.</span>
-                      <span className="ai-inline-subtask-text">{item}</span>
-                      {!handledInlineSubtasks.has(i) && (
-                        <span className="ai-inline-subtask-actions">
-                          <button
-                            type="button"
-                            className="btn btn-primary btn-xs"
-                            onClick={() => handleInlineAcceptSingleSubtask(item, i)}
-                            title="Aceitar subtarefa"
-                          >
-                            ✓
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-ghost btn-xs"
-                            onClick={() => handleInlineRejectSingleSubtask(i)}
-                            title="Rejeitar subtarefa"
-                          >
-                            ✕
-                          </button>
-                        </span>
-                      )}
+                      <span className="ai-inline-subtask-text card-detail-markdown">
+                        <MarkdownWithCode>{item}</MarkdownWithCode>
+                      </span>
+                      <span className="ai-inline-subtask-actions">
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-xs"
+                          onClick={() => handleInlineAcceptSingleSubtask(item, pending.msgId, pending.suggestionIndex)}
+                          title="Aceitar subtarefa"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-xs"
+                          onClick={() => handleInlineRejectSingleSubtask(pending.msgId, pending.suggestionIndex)}
+                          title="Rejeitar subtarefa"
+                        >
+                          ✕
+                        </button>
+                      </span>
                     </li>
-                  ))}
+                    )
+                  })}
                 </ul>
               </div>
             )}

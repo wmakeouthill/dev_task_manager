@@ -1,4 +1,5 @@
 import type { ChecklistItemData } from '@/shared/types'
+import { MarkdownWithCode } from '@/shared/components/MarkdownWithCode'
 
 interface CardSubtasksModalProps {
   titulo: string
@@ -43,13 +44,13 @@ export function CardSubtasksModal({ titulo, items, onClose }: Readonly<CardSubta
                   {item.concluido ? '☑' : '☐'}
                 </span>
                 <span
-                  className="card-subtasks-modal-text"
+                  className="card-subtasks-modal-text card-detail-markdown"
                   style={{
                     color: item.concluido ? 'var(--text-muted)' : 'var(--text-primary)',
                     textDecoration: item.concluido ? 'line-through' : 'none',
                   }}
                 >
-                  {item.texto}
+                  <MarkdownWithCode>{item.texto}</MarkdownWithCode>
                 </span>
               </li>
             ))}

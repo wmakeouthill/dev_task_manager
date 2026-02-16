@@ -107,7 +107,9 @@ export function SortableCard({ card, onOpen, checklistItems = [] }: Readonly<Sor
                 <span className="kanban-card-subtask-icon" aria-hidden>
                   {item.concluido ? '☑' : '☐'}
                 </span>
-                <span className="kanban-card-subtask-text">{item.texto}</span>
+                <span className="kanban-card-subtask-text kanban-card-desc-markdown">
+                  <MarkdownWithCode>{item.texto}</MarkdownWithCode>
+                </span>
               </li>
             ))}
             {moreCount > 0 ? (

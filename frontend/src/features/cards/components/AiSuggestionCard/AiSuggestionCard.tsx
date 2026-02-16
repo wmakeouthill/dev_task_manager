@@ -68,7 +68,9 @@ export function AiSuggestionCard({ suggestion, onAccept, onReject, onAcceptSingl
                                 className={`ai-suggestion-subtask-item${handledItems.has(i) ? ' ai-suggestion-subtask-item--handled' : ''}`}
                             >
                                 <span className="ai-suggestion-subtask-number">{i + 1}.</span>
-                                <span className="ai-suggestion-subtask-text">{item}</span>
+                                <span className="ai-suggestion-subtask-text card-detail-markdown">
+                                    <MarkdownWithCode>{item}</MarkdownWithCode>
+                                </span>
                                 {!handledItems.has(i) && (
                                     <span className="ai-suggestion-subtask-actions">
                                         <button
@@ -101,24 +103,14 @@ export function AiSuggestionCard({ suggestion, onAccept, onReject, onAcceptSingl
 
             <div className="ai-suggestion-card-actions">
                 {isSubtasks ? (
-                    <>
-                        <button
-                            type="button"
-                            className="btn btn-primary btn-sm"
-                            onClick={onAccept}
-                            disabled={isPending || remainingCount === 0}
-                        >
-                            ✓ Aceitar todas ({remainingCount})
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-ghost btn-sm"
-                            onClick={onReject}
-                            disabled={isPending}
-                        >
-                            ✕ Rejeitar todas
-                        </button>
-                    </>
+                    <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={onReject}
+                        disabled={isPending}
+                    >
+                        ✕ Rejeitar sugestão
+                    </button>
                 ) : (
                     <>
                         <button

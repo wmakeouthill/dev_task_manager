@@ -2947,9 +2947,9 @@ select:focus-visible {
 
 .kanban-card-subtask {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 4px;
-  margin-top: 1px;
+  margin-top: 0;
 }
 
 .kanban-card-subtask-icon {
@@ -2959,9 +2959,20 @@ select:focus-visible {
 .kanban-card-subtask-text {
   flex: 1;
   min-width: 0;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  line-height: 1.2;
+  max-height: calc(1.2em * 2);
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.kanban-card-subtask-text,
+.kanban-card-subtask-text * {
+  margin: 0;
+  padding: 0;
 }
 
 .kanban-card-subtask-more {
@@ -3250,6 +3261,20 @@ select:focus-visible {
 
 .card-subtasks-modal-text {
   flex: 1;
+  line-height: 1.25;
+}
+
+.card-subtasks-modal-text > *:first-child {
+  margin-top: 0;
+}
+
+.card-subtasks-modal-text > *:last-child {
+  margin-bottom: 0;
+}
+
+.card-subtasks-modal-text * {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 /* ===== Settings Page ===== */
@@ -3605,6 +3630,96 @@ select:focus-visible {
 .checklist-text-btn.done {
   text-decoration: line-through;
   color: var(--text-muted);
+}
+
+.checklist-text-markdown {
+  display: block;
+  line-height: 1.25;
+}
+
+.checklist-text-markdown.card-detail-markdown,
+.ai-inline-subtask-text.card-detail-markdown,
+.ai-suggestion-subtask-text.card-detail-markdown,
+.card-subtasks-modal-text.card-detail-markdown,
+.subtask-detail .card-detail-markdown {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  min-height: 0;
+  cursor: inherit;
+}
+
+.checklist-text-markdown.card-detail-markdown:hover,
+.ai-inline-subtask-text.card-detail-markdown:hover,
+.ai-suggestion-subtask-text.card-detail-markdown:hover,
+.card-subtasks-modal-text.card-detail-markdown:hover,
+.subtask-detail .card-detail-markdown:hover {
+  border-color: transparent;
+}
+
+.checklist-text-markdown,
+.checklist-text-markdown * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.checklist-text-markdown ul,
+.checklist-text-markdown ol,
+.ai-inline-subtask-text ul,
+.ai-inline-subtask-text ol,
+.ai-suggestion-subtask-text ul,
+.ai-suggestion-subtask-text ol,
+.card-subtasks-modal-text ul,
+.card-subtasks-modal-text ol,
+.subtask-detail .card-detail-markdown ul,
+.subtask-detail .card-detail-markdown ol {
+  padding-left: 14px;
+  margin: 0;
+}
+
+.checklist-text-markdown h1,
+.checklist-text-markdown h2,
+.checklist-text-markdown h3,
+.checklist-text-markdown h4,
+.checklist-text-markdown h5,
+.checklist-text-markdown h6,
+.ai-inline-subtask-text h1,
+.ai-inline-subtask-text h2,
+.ai-inline-subtask-text h3,
+.ai-inline-subtask-text h4,
+.ai-inline-subtask-text h5,
+.ai-inline-subtask-text h6,
+.ai-suggestion-subtask-text h1,
+.ai-suggestion-subtask-text h2,
+.ai-suggestion-subtask-text h3,
+.ai-suggestion-subtask-text h4,
+.ai-suggestion-subtask-text h5,
+.ai-suggestion-subtask-text h6,
+.card-subtasks-modal-text h1,
+.card-subtasks-modal-text h2,
+.card-subtasks-modal-text h3,
+.card-subtasks-modal-text h4,
+.card-subtasks-modal-text h5,
+.card-subtasks-modal-text h6,
+.subtask-detail .card-detail-markdown h1,
+.subtask-detail .card-detail-markdown h2,
+.subtask-detail .card-detail-markdown h3,
+.subtask-detail .card-detail-markdown h4,
+.subtask-detail .card-detail-markdown h5,
+.subtask-detail .card-detail-markdown h6,
+.checklist-text-markdown p,
+.ai-inline-subtask-text p,
+.ai-suggestion-subtask-text p,
+.card-subtasks-modal-text p,
+.subtask-detail .card-detail-markdown p {
+  margin: 0;
+}
+
+.checklist-text-btn.done .checklist-text-markdown,
+.checklist-text-btn.done .checklist-text-markdown * {
+  color: var(--text-muted) !important;
+  text-decoration: line-through;
 }
 
 /* ===== Subtask Modal ===== */
@@ -3974,6 +4089,20 @@ select:focus-visible {
 
 .ai-suggestion-subtask-text {
   flex: 1;
+  line-height: 1.2;
+}
+
+.ai-suggestion-subtask-text > *:first-child {
+  margin-top: 0;
+}
+
+.ai-suggestion-subtask-text > *:last-child {
+  margin-bottom: 0;
+}
+
+.ai-suggestion-subtask-text * {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .ai-suggestion-subtask-actions {
@@ -4575,6 +4704,20 @@ select:focus-visible {
 
 .ai-inline-subtask-text {
   flex: 1;
+  line-height: 1.2;
+}
+
+.ai-inline-subtask-text > *:first-child {
+  margin-top: 0;
+}
+
+.ai-inline-subtask-text > *:last-child {
+  margin-bottom: 0;
+}
+
+.ai-inline-subtask-text * {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .ai-inline-subtask-actions {

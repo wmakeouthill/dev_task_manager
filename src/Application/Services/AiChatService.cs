@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using DevTaskManager.Application.DTOs;
 using DevTaskManager.Domain.Exceptions;
@@ -14,6 +15,9 @@ namespace DevTaskManager.Application.Services;
 /// </summary>
 public class AiChatService(ICardRepository cardRepo, IChecklistItemRepository checklistRepo, IBoardRepository boardRepo)
 {
+    private const int MaxAgentSteps = 3;
+    private static readonly Regex ToolCallRegex = new(@"<<<TOOL_CALL>>>(.*?)<<<END_TOOL_CALL>>>", RegexOptions.Singleline | RegexOptions.Compiled);
+
     public async Task<AiChatResponse> ExecuteAsync(
         AiChatRequest request,
         IAiProvider aiProvider,
@@ -67,14 +71,26 @@ public class AiChatService(ICardRepository cardRepo, IChecklistItemRepository ch
             checklistTexts);
 
         var sw = Stopwatch.StartNew();
-        var response = await aiProvider.ExecuteAsync(aiRequest, ct);
+        var response = await ExecuteAgenticChatAsync(
+            aiProvider,
+            aiRequest,
+            card.Titulo,
+            card.Descricao,
+            card.Status.ToString(),
+            columnName,
+            checklistTexts,
+            referencedCards,
+            request.History,
+            ct);
         sw.Stop();
 
+        var responseContent = response.Content ?? string.Empty;
+
         // Detectar sugestões estruturadas na resposta
-        var suggestions = DetectSuggestions(response.Content);
+        var suggestions = DetectSuggestions(responseContent);
 
         // Limpar os delimitadores do texto exibido no chat
-        var cleanReply = CleanDelimiters(response.Content);
+        var cleanReply = CleanDelimiters(responseContent);
 
         return new AiChatResponse(
             cleanReply,
@@ -82,6 +98,124 @@ public class AiChatService(ICardRepository cardRepo, IChecklistItemRepository ch
             response.Provider,
             sw.Elapsed.TotalMilliseconds);
     }
+
+    private static async Task<AiResponse> ExecuteAgenticChatAsync(
+        IAiProvider aiProvider,
+        AiRequest baseRequest,
+        string cardTitle,
+        string? cardDescription,
+        string cardStatus,
+        string? columnName,
+        IReadOnlyList<string> checklistItems,
+        IReadOnlyList<string> referencedCards,
+        IReadOnlyList<AiChatMessage>? history,
+        CancellationToken ct)
+    {
+        var transcript = new StringBuilder();
+        transcript.AppendLine(baseRequest.CardDescription ?? string.Empty);
+        transcript.AppendLine();
+        transcript.AppendLine("--- Modo Agente ---");
+        transcript.AppendLine("Você pode solicitar UMA ferramenta por vez com o formato exato:");
+        transcript.AppendLine("<<<TOOL_CALL>>>{\"tool\":\"nome_da_ferramenta\",\"input\":{}}<<<END_TOOL_CALL>>>");
+        transcript.AppendLine("Ferramentas disponíveis:");
+        transcript.AppendLine("- get_card_snapshot");
+        transcript.AppendLine("- get_checklist_items");
+        transcript.AppendLine("- get_referenced_cards");
+        transcript.AppendLine("- get_conversation_history");
+        transcript.AppendLine("Quando tiver contexto suficiente, responda diretamente para o usuário sem TOOL_CALL.");
+
+        AiResponse? lastResponse = null;
+
+        for (var step = 0; step < MaxAgentSteps; step++)
+        {
+            var stepRequest = baseRequest with { CardDescription = transcript.ToString() };
+            lastResponse = await aiProvider.ExecuteAsync(stepRequest, ct);
+            var responseContent = lastResponse.Content ?? string.Empty;
+
+            if (!TryExtractToolCall(responseContent, out var toolCall))
+                return lastResponse;
+
+            var toolResult = ExecuteTool(
+                toolCall,
+                cardTitle,
+                cardDescription,
+                cardStatus,
+                columnName,
+                checklistItems,
+                referencedCards,
+                history);
+
+            transcript.AppendLine();
+            transcript.AppendLine($"--- Resultado da ferramenta (passo {step + 1}) ---");
+            transcript.AppendLine(toolResult);
+            transcript.AppendLine("Com base nisso, decida: ou chame outra ferramenta, ou responda diretamente ao usuário.");
+        }
+
+        return lastResponse ?? new AiResponse("Não foi possível concluir a resposta do agente.", aiProvider.ProviderName, TimeSpan.Zero);
+    }
+
+    private static bool TryExtractToolCall(string content, out AgentToolCall toolCall)
+    {
+        toolCall = new AgentToolCall(string.Empty, null);
+
+        if (string.IsNullOrWhiteSpace(content))
+            return false;
+
+        var match = ToolCallRegex.Match(content);
+        if (!match.Success)
+            return false;
+
+        var json = match.Groups[1].Value.Trim();
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var tool = doc.RootElement.TryGetProperty("tool", out var toolProp)
+                ? toolProp.GetString()
+                : null;
+
+            JsonElement? input = null;
+            if (doc.RootElement.TryGetProperty("input", out var inputProp))
+                input = inputProp;
+
+            if (string.IsNullOrWhiteSpace(tool))
+                return false;
+
+            toolCall = new AgentToolCall(tool!, input);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static string ExecuteTool(
+        AgentToolCall call,
+        string cardTitle,
+        string? cardDescription,
+        string cardStatus,
+        string? columnName,
+        IReadOnlyList<string> checklistItems,
+        IReadOnlyList<string> referencedCards,
+        IReadOnlyList<AiChatMessage>? history)
+    {
+        return call.Tool.ToLowerInvariant() switch
+        {
+            "get_card_snapshot" => JsonSerializer.Serialize(new
+            {
+                title = cardTitle,
+                description = cardDescription,
+                status = cardStatus,
+                column = columnName
+            }),
+            "get_checklist_items" => JsonSerializer.Serialize(checklistItems),
+            "get_referenced_cards" => JsonSerializer.Serialize(referencedCards),
+            "get_conversation_history" => JsonSerializer.Serialize(history ?? []),
+            _ => JsonSerializer.Serialize(new { error = $"Tool '{call.Tool}' não suportada." })
+        };
+    }
+
+    private readonly record struct AgentToolCall(string Tool, JsonElement? Input);
 
     private static string BuildSystemPrompt(
         string titulo, string? descricao, string status, string? columnName,
@@ -213,7 +347,10 @@ public class AiChatService(ICardRepository cardRepo, IChecklistItemRepository ch
                 .Where(l => l.Length > 0)
                 .ToList();
 
-            suggestions.Add(new AiSuggestion("subtasks", subtaskMatch.Groups[1].Value.Trim(), lines));
+            foreach (var line in lines)
+            {
+                suggestions.Add(new AiSuggestion("subtasks", line, new[] { line }));
+            }
         }
 
         return suggestions;
@@ -225,7 +362,8 @@ public class AiChatService(ICardRepository cardRepo, IChecklistItemRepository ch
     /// </summary>
     private static string CleanDelimiters(string content)
     {
-        var cleaned = Regex.Replace(content, @"<<<DESCRICAO>>>.*?<<<FIM_DESCRICAO>>>", "", RegexOptions.Singleline);
+        var withoutToolCalls = Regex.Replace(content, @"<<<TOOL_CALL>>>.*?<<<END_TOOL_CALL>>>", "", RegexOptions.Singleline);
+        var cleaned = Regex.Replace(withoutToolCalls, @"<<<DESCRICAO>>>.*?<<<FIM_DESCRICAO>>>", "", RegexOptions.Singleline);
         cleaned = Regex.Replace(cleaned, @"<<<SUBTAREFAS>>>.*?<<<FIM_SUBTAREFAS>>>", "", RegexOptions.Singleline);
         // Remover linhas vazias excessivas resultantes
         cleaned = Regex.Replace(cleaned, @"\n{3,}", "\n\n");

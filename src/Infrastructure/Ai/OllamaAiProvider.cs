@@ -10,14 +10,21 @@ namespace DevTaskManager.Infrastructure.Ai;
 /// </summary>
 public class OllamaAiProvider : IAiProvider
 {
+    private const int DefaultNumCtx = 20000;
+    private const double DefaultTemperature = 0.2;
     private readonly HttpClient _http;
     private readonly string _model;
+    private readonly int _numCtx;
 
     public string ProviderName => "ollama";
 
     public OllamaAiProvider(string baseUrl, string model)
     {
         _model = string.IsNullOrWhiteSpace(model) ? "llama3" : model;
+        var configuredNumCtx = Environment.GetEnvironmentVariable("OLLAMA_NUM_CTX");
+        _numCtx = int.TryParse(configuredNumCtx, out var parsed) && parsed > 0
+            ? parsed
+            : DefaultNumCtx;
         _http = new HttpClient { BaseAddress = new Uri(baseUrl.TrimEnd('/')) };
     }
 
@@ -33,10 +40,19 @@ public class OllamaAiProvider : IAiProvider
                 model = _model,
                 messages = new[]
                 {
-                    new { role = "system", content = "Você é um assistente de gerenciamento de tarefas. Responda sempre em português." },
+                    new
+                    {
+                        role = "system",
+                        content = "Você é um assistente técnico de gestão de tarefas. Responda sempre em português do Brasil, de forma objetiva, prática e acionável. Siga rigorosamente instruções de formato do usuário/contexto. Quando houver sugestão aplicável para descrição ou subtarefas, use os delimitadores esperados pelo sistema (<<<DESCRICAO>>>...<<<FIM_DESCRICAO>>> e <<<SUBTAREFAS>>>...<<<FIM_SUBTAREFAS>>>)."
+                    },
                     new { role = "user", content = prompt }
                 },
-                stream = false
+                stream = false,
+                options = new
+                {
+                    num_ctx = _numCtx,
+                    temperature = DefaultTemperature
+                }
             };
 
             var json = JsonSerializer.Serialize(body);
