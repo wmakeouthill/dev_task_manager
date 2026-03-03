@@ -224,6 +224,7 @@ export function StickyNote({ note }: StickyNoteProps) {
         '--note-bg': colors.bg,
         '--note-header': colors.header,
         width: noteWidth,
+        height: isMinimized ? undefined : noteHeight,
       } as React.CSSProperties}
     >
       {/* Header */}
@@ -279,7 +280,7 @@ export function StickyNote({ note }: StickyNoteProps) {
 
       {/* Body — hidden when minimized */}
       {!isMinimized && (
-        <div className="note-body" style={{ height: noteHeight - 36 }}>
+        <div className="note-body">
           {aiLoading && (
             <div className="note-ai-loading">
               <span className="note-ai-loading-dot" />
