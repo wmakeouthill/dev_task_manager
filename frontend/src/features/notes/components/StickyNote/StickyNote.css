@@ -1,0 +1,239 @@
+.sticky-note {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3);
+  background: var(--note-bg, #2d2a00);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  transition: box-shadow 0.15s;
+  min-width: 200px;
+  min-height: 140px;
+}
+
+.sticky-note:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.sticky-note--detached {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+  z-index: 9999 !important;
+}
+
+/* ---- Header / Drag handle ---- */
+.note-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--note-header, #3d3800);
+  cursor: grab;
+  user-select: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.note-header:active {
+  cursor: grabbing;
+}
+
+.note-drag-icon {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.note-title-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary, #e3e3e3);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: text;
+  padding: 0;
+  min-width: 0;
+}
+
+.note-title-input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+  font-weight: 400;
+}
+
+/* ---- Toolbar ---- */
+.note-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.note-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.5);
+  transition: background 0.12s, color 0.12s;
+}
+
+.note-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.note-btn--danger {
+  color: #e05c5c;
+}
+
+.note-btn--danger:hover {
+  background: rgba(224, 92, 92, 0.15);
+}
+
+/* ---- Color picker ---- */
+.note-color-picker-wrap {
+  position: relative;
+}
+
+.note-color-picker {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--bg-overlay, #252525);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  gap: 5px;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.note-color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.1s, transform 0.1s;
+}
+
+.note-color-swatch:hover {
+  transform: scale(1.15);
+}
+
+.note-color-swatch.active {
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+/* ---- Body / Textarea ---- */
+.note-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.note-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary, #e3e3e3);
+  font-size: 13px;
+  font-family: inherit;
+  resize: none;
+  line-height: 1.6;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
+.note-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+}
+
+.note-textarea:disabled {
+  opacity: 0.5;
+}
+
+/* ---- AI loading / error ---- */
+.note-ai-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  background: rgba(35, 131, 226, 0.12);
+  border: 1px solid rgba(35, 131, 226, 0.25);
+  font-size: 12px;
+  color: #60a5fa;
+}
+
+.note-ai-loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #60a5fa;
+  animation: notePulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes notePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.note-ai-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  background: rgba(224, 92, 92, 0.1);
+  border: 1px solid rgba(224, 92, 92, 0.25);
+  font-size: 11px;
+  color: #e05c5c;
+}
+
+.note-ai-error button {
+  background: none;
+  border: none;
+  color: #e05c5c;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* ---- Resize handle ---- */
+.note-resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+  background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.15) 50%);
+  border-radius: 0 0 8px 0;
+}
+
+.note-resize-handle:hover {
+  background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.3) 50%);
+}

@@ -71,6 +71,17 @@ export function AppLayout() {
             {!collapsed && <span className="sidebar-link-label">Lembretes</span>}
           </NavLink>
           <NavLink
+            to="/notes"
+            className={({ isActive }) =>
+              `app-sidebar-link ${isActive ? 'active' : ''}`
+            }
+            onClick={() => setSidebarOpen(false)}
+            title="Notas"
+          >
+            <span className="sidebar-link-icon">📌</span>
+            {!collapsed && <span className="sidebar-link-label">Notas</span>}
+          </NavLink>
+          <NavLink
             to="/insights"
             className={({ isActive }) =>
               `app-sidebar-link ${isActive ? 'active' : ''}`

@@ -77,6 +77,7 @@ builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<IChecklistItemRepository, ChecklistItemRepository>();
 builder.Services.AddScoped<IReminderRepository, ReminderRepository>();
 builder.Services.AddScoped<IInsightRepository, InsightRepository>();
+builder.Services.AddScoped<IStickyNoteRepository, StickyNoteRepository>();
 var geminiApiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY")
     ?? builder.Configuration["Gemini:ApiKey"];
 builder.Services.AddScoped<IAiProvider>(_ => new DevTaskManager.Infrastructure.Ai.GeminiAiProvider(geminiApiKey));
@@ -126,6 +127,8 @@ builder.Services.AddScoped<SaveInsightsService>();
 builder.Services.AddScoped<DeleteInsightService>();
 builder.Services.AddScoped<DeleteAllInsightsService>();
 builder.Services.AddScoped<ListPendingRemindersService>();
+builder.Services.AddScoped<StickyNoteService>();
+builder.Services.AddScoped<AiNoteAssistService>();
 #pragma warning disable CA1416
 builder.Services.AddSingleton<WindowsUserService>();
 #pragma warning restore CA1416
@@ -174,6 +177,7 @@ api.MapReminderEndpoints();
 api.MapAiEndpoints();
 api.MapDashboardEndpoints();
 api.MapInsightEndpoints();
+api.MapStickyNoteEndpoints();
 
 // SPA fallback: rotas do frontend (ex: /boards/123) retornam index.html
 if (!app.Environment.IsDevelopment())
@@ -215,7 +219,8 @@ static async Task EnsureAllTablesAsync(AppDbContext db)
         "CREATE INDEX IF NOT EXISTS IX_reminders_CardId ON reminders(CardId)",
         "CREATE INDEX IF NOT EXISTS IX_reminders_Status_ScheduleAt ON reminders(Status, ScheduleAt)",
         "CREATE TABLE IF NOT EXISTS insights (Id TEXT NOT NULL PRIMARY KEY, CardId TEXT NOT NULL, CardTitle TEXT NOT NULL, Status TEXT NOT NULL, Content TEXT NOT NULL, Provider TEXT NOT NULL, Action TEXT NOT NULL, DurationMs REAL NOT NULL, CreatedAt TEXT NOT NULL)",
-        "CREATE INDEX IF NOT EXISTS IX_insights_CardId ON insights(CardId)"
+        "CREATE INDEX IF NOT EXISTS IX_insights_CardId ON insights(CardId)",
+        "CREATE TABLE IF NOT EXISTS sticky_notes (Id TEXT NOT NULL PRIMARY KEY, Title TEXT NOT NULL DEFAULT '', Content TEXT NOT NULL DEFAULT '', Color TEXT NOT NULL DEFAULT 'yellow', PositionX REAL NOT NULL DEFAULT 0, PositionY REAL NOT NULL DEFAULT 0, Width REAL NOT NULL DEFAULT 280, Height REAL NOT NULL DEFAULT 220, ZIndex INTEGER NOT NULL DEFAULT 0, CreatedAt TEXT NOT NULL, UpdatedAt TEXT NOT NULL)"
     };
     foreach (var sql in statements)
         await db.Database.ExecuteSqlRawAsync(sql);

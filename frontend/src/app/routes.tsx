@@ -6,6 +6,7 @@ import { CardDetailPage } from '@/features/cards/pages/CardDetailPage/CardDetail
 import { RemindersPage } from '@/features/reminders/pages/RemindersPage'
 import { SettingsPage } from '@/features/settings'
 import { InsightsPage } from '@/features/ai/pages/InsightsPage'
+import { NotesPage } from '@/features/notes'
 
 export function AppRoutes() {
   return (
@@ -16,6 +17,7 @@ export function AppRoutes() {
         <Route path="/boards/:boardId" element={<BoardKanbanPage />} />
         <Route path="/cards/:cardId" element={<CardDetailPage />} />
         <Route path="/reminders" element={<RemindersPage />} />
+        <Route path="/notes" element={<NotesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/insights" element={<InsightsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

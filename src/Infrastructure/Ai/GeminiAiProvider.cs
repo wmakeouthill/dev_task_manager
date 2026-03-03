@@ -84,6 +84,10 @@ public class GeminiAiProvider : IAiProvider
             "clarify" => "Liste perguntas para esclarecer requisitos e critérios de aceite.",
             "risk" => "Identifique riscos e dependências e sugira mitigações.",
             "insights" => "Dê insights breves sobre priorização e próximos passos para o dia.",
+            "note-help" => "Ajude a escrever ou complementar o conteúdo desta nota. Retorne apenas o texto da nota melhorado, sem explicações adicionais.",
+            "note-fix" => "Corrija gramática, ortografia e clareza do texto desta nota. Retorne apenas o texto corrigido, sem explicações adicionais.",
+            "note-organize" => "Organize e estruture o conteúdo desta nota em tópicos claros usando markdown. Retorne apenas o texto organizado, sem explicações adicionais.",
+            "note-expand" => "Expanda e enriqueça o conteúdo desta nota com mais detalhes relevantes. Retorne apenas o texto expandido, sem explicações adicionais.",
             _ => "Comente o card de forma útil para o time."
         });
         return sb.ToString();

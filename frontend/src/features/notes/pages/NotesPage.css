@@ -1,0 +1,153 @@
+.notes-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ---- Header ---- */
+.notes-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 28px 16px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.notes-page-title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notes-page-subtitle {
+  font-size: 13px;
+  color: var(--text-muted, #888);
+  margin: 0;
+}
+
+.notes-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.notes-add-btn {
+  white-space: nowrap;
+}
+
+.notes-floating-badge {
+  font-size: 12px;
+  color: var(--text-muted, #888);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+/* ---- Canvas wrapper ---- */
+.notes-canvas-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.notes-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  min-height: 600px;
+}
+
+/* Subtle dot-grid background to feel like an infinite canvas */
+.notes-canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Notes sit above the grid */
+.notes-canvas > .sticky-note {
+  z-index: 1;
+}
+
+/* ---- Loading ---- */
+.notes-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #888);
+  font-size: 14px;
+}
+
+/* ---- Empty state ---- */
+.notes-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.notes-empty-icon {
+  font-size: 48px;
+  opacity: 0.4;
+}
+
+.notes-empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #e3e3e3);
+  margin: 0;
+  opacity: 0.6;
+}
+
+.notes-empty-desc {
+  font-size: 14px;
+  color: var(--text-muted, #888);
+  margin: 0;
+  line-height: 1.7;
+  max-width: 400px;
+}
+
+.notes-empty-desc code {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--text-primary, #e3e3e3);
+}
+
+.notes-empty > .btn {
+  pointer-events: all;
+  margin-top: 8px;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  .notes-page-header {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .notes-page-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

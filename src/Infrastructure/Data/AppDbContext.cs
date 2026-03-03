@@ -13,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
     public DbSet<Reminder> Reminders => Set<Reminder>();
     public DbSet<Insight> Insights => Set<Insight>();
+    public DbSet<StickyNote> StickyNotes => Set<StickyNote>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
