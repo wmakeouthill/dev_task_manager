@@ -97,17 +97,33 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Intercepta tentativas de abrir novas janelas — navega na mesma aba.
-    /// Evita janelas fantasma com "site indisponível".
+    /// Intercepta tentativas de abrir novas janelas (window.open / target="_blank").
+    /// — /notes/popup  → abre como janela flutuante sem borda (NotePopupWindow)
+    /// — links externos → abre no navegador do sistema
+    /// — outros internos → navega na mesma janela
     /// </summary>
     private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
     {
         e.Handled = true;
 
-        // Se é um link externo (não localhost), abre no navegador do sistema
-        if (Uri.TryCreate(e.Uri, UriKind.Absolute, out var uri)
-            && uri.Host != "localhost"
-            && uri.Host != "127.0.0.1")
+        if (!Uri.TryCreate(e.Uri, UriKind.Absolute, out var uri)) return;
+
+        // Sticky-note popup — abre como janela WPF frameless
+        if ((uri.Host is "localhost" or "127.0.0.1") &&
+            uri.AbsolutePath.StartsWith("/notes/popup", StringComparison.OrdinalIgnoreCase))
+        {
+            var w = e.WindowFeatures.HasSize ? e.WindowFeatures.Width  : 290;
+            var h = e.WindowFeatures.HasSize ? e.WindowFeatures.Height : 252;
+            Dispatcher.Invoke(() =>
+            {
+                var popup = new NotePopupWindow(e.Uri, w, h);
+                popup.Show();
+            });
+            return;
+        }
+
+        // Link externo — abre no navegador do sistema
+        if (uri.Host != "localhost" && uri.Host != "127.0.0.1")
         {
             try
             {
@@ -118,12 +134,11 @@ public partial class MainWindow : Window
                 });
             }
             catch { /* ignore */ }
+            return;
         }
-        else
-        {
-            // Link interno — navega na mesma janela
-            AppWebView.CoreWebView2.Navigate(e.Uri);
-        }
+
+        // Outro link interno — navega na mesma janela
+        AppWebView.CoreWebView2.Navigate(e.Uri);
     }
 
     /// <summary>

@@ -29,8 +29,18 @@ export function SlashCommandMenu({
 
   useEffect(() => {
     if (!open || filtered.length === 0) return
-    const el = listRef.current?.children[selectedIndex] as HTMLElement | undefined
-    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    const list = listRef.current
+    const el = list?.children[selectedIndex] as HTMLElement | undefined
+    if (!list || !el) return
+    // Scroll manual no container da lista — mais confiável que scrollIntoView
+    // quando há overflow:hidden no elemento pai
+    const itemTop    = el.offsetTop
+    const itemBottom = itemTop + el.offsetHeight
+    if (itemTop < list.scrollTop) {
+      list.scrollTop = itemTop
+    } else if (itemBottom > list.scrollTop + list.clientHeight) {
+      list.scrollTop = itemBottom - list.clientHeight
+    }
   }, [selectedIndex, open, filtered.length])
 
   if (!open) return null

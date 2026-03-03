@@ -222,6 +222,60 @@
   flex-shrink: 0;
 }
 
+/* ---- Markdown preview ---- */
+.note-preview {
+  flex: 1;
+  overflow-y: auto;
+  cursor: text;
+  color: var(--text-primary, #e3e3e3);
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 0;
+}
+
+.note-preview-placeholder {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+}
+
+.note-preview p           { margin: 0 0 5px; }
+.note-preview p:last-child { margin-bottom: 0; }
+.note-preview h1          { font-size: 15px; font-weight: 700; margin: 0 0 5px; }
+.note-preview h2          { font-size: 14px; font-weight: 700; margin: 0 0 5px; }
+.note-preview h3          { font-size: 13px; font-weight: 600; margin: 0 0 4px; }
+.note-preview strong      { font-weight: 700; }
+.note-preview em          { font-style: italic; }
+.note-preview code {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 11px;
+  font-family: monospace;
+}
+.note-preview pre {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  padding: 5px 7px;
+  margin: 4px 0;
+  overflow-x: auto;
+}
+.note-preview pre code     { background: none; padding: 0; }
+.note-preview ul,
+.note-preview ol           { margin: 0 0 5px; padding-left: 16px; }
+.note-preview li           { margin-bottom: 2px; }
+.note-preview blockquote {
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+  margin: 4px 0;
+  padding-left: 7px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.note-preview a            { color: #60a5fa; text-decoration: underline; }
+.note-preview hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin: 6px 0;
+}
+
 /* ---- Resize handle ---- */
 .note-resize-handle {
   position: absolute;

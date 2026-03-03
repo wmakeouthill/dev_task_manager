@@ -7,10 +7,14 @@ import { RemindersPage } from '@/features/reminders/pages/RemindersPage'
 import { SettingsPage } from '@/features/settings'
 import { InsightsPage } from '@/features/ai/pages/InsightsPage'
 import { NotesPage } from '@/features/notes'
+import { NotePopupPage } from '@/features/notes/pages/NotePopupPage'
 
 export function AppRoutes() {
   return (
     <Routes>
+      {/* Popup note: rota standalone, sem AppLayout */}
+      <Route path="/notes/popup" element={<NotePopupPage />} />
+
       <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/boards" element={<BoardsPage />} />
