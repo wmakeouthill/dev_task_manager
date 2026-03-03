@@ -201,6 +201,11 @@ export function NotePopupPage() {
           postToWpf('drag-start')
         }}
       >
+        <span
+          className="popup-drag-handle"
+          aria-hidden
+          onMouseDown={(e) => { e.preventDefault(); postToWpf('drag-start') }}
+        >⠿</span>
         <input
           className="popup-title"
           value={title}
