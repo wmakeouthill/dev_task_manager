@@ -23,6 +23,13 @@ const USE_CASES: UseCase[] = [
     description:
       'Use sugestões de IA para descrever tarefas, gerar subtarefas e enriquecer seus cards. Integração com modelos locais (Ollama) ou APIs.',
   },
+  {
+    id: '4',
+    icon: '📌',
+    title: 'Sticky Notes',
+    description:
+      'Capture ideias rápidas como notas coloridas. Minimize, redimensione, reordene com drag-and-drop e use Markdown + IA diretamente nas notas.',
+  },
 ];
 
 const AUTO_INTERVAL = 6000;

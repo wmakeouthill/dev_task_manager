@@ -1,27 +1,25 @@
 .sticky-note {
-  position: absolute;
   display: flex;
   flex-direction: column;
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.3);
   background: var(--note-bg, #2d2a00);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  overflow: hidden;
-  transition: box-shadow 0.15s;
-  min-width: 200px;
-  min-height: 140px;
+  overflow: visible;
+  transition: box-shadow 0.15s, opacity 0.15s;
+  min-width: 0;
+  position: relative;
+  flex-shrink: 0;
 }
 
 .sticky-note:hover {
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
-.sticky-note--detached {
-  position: fixed;
-  top: 80px;
-  right: 24px;
+.sticky-note--dragging {
+  opacity: 0.45;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
-  z-index: 9999 !important;
+  z-index: 999;
 }
 
 /* ---- Header / Drag handle ---- */
@@ -31,14 +29,15 @@
   gap: 6px;
   padding: 6px 8px;
   background: var(--note-header, #3d3800);
-  cursor: grab;
-  user-select: none;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
+  border-radius: 8px 8px 0 0;
+  user-select: none;
 }
 
-.note-header:active {
-  cursor: grabbing;
+.sticky-note--minimized .note-header {
+  border-radius: 8px;
+  border-bottom: none;
 }
 
 .note-drag-icon {
@@ -46,6 +45,17 @@
   color: rgba(255, 255, 255, 0.3);
   flex-shrink: 0;
   line-height: 1;
+  cursor: grab;
+  touch-action: none;
+  padding: 2px 1px;
+}
+
+.note-drag-icon:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.note-drag-icon:active {
+  cursor: grabbing;
 }
 
 .note-title-input {
@@ -142,8 +152,9 @@
   display: flex;
   flex-direction: column;
   padding: 8px;
-  overflow: hidden;
+  overflow-y: auto;
   position: relative;
+  min-height: 0;
 }
 
 .note-textarea {
@@ -157,8 +168,8 @@
   resize: none;
   line-height: 1.6;
   width: 100%;
-  height: 100%;
   padding: 0;
+  min-height: 80px;
 }
 
 .note-textarea::placeholder {
@@ -168,6 +179,60 @@
 
 .note-textarea:disabled {
   opacity: 0.5;
+}
+
+/* ---- Markdown preview ---- */
+.note-preview {
+  flex: 1;
+  cursor: text;
+  color: var(--text-primary, #e3e3e3);
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 0;
+  overflow-y: visible;
+}
+
+.note-preview-placeholder {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+}
+
+.note-preview p           { margin: 0 0 5px; }
+.note-preview p:last-child { margin-bottom: 0; }
+.note-preview h1          { font-size: 15px; font-weight: 700; margin: 0 0 5px; }
+.note-preview h2          { font-size: 14px; font-weight: 700; margin: 0 0 5px; }
+.note-preview h3          { font-size: 13px; font-weight: 600; margin: 0 0 4px; }
+.note-preview strong      { font-weight: 700; }
+.note-preview em          { font-style: italic; }
+.note-preview code {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 11px;
+  font-family: monospace;
+}
+.note-preview pre {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  padding: 5px 7px;
+  margin: 4px 0;
+  overflow-x: auto;
+}
+.note-preview pre code     { background: none; padding: 0; }
+.note-preview ul,
+.note-preview ol           { margin: 0 0 5px; padding-left: 16px; }
+.note-preview li           { margin-bottom: 2px; }
+.note-preview blockquote {
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+  margin: 4px 0;
+  padding-left: 7px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.note-preview a            { color: #60a5fa; text-decoration: underline; }
+.note-preview hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin: 6px 0;
 }
 
 /* ---- AI loading / error ---- */
@@ -222,72 +287,33 @@
   flex-shrink: 0;
 }
 
-/* ---- Markdown preview ---- */
-.note-preview {
-  flex: 1;
-  overflow-y: auto;
-  cursor: text;
-  color: var(--text-primary, #e3e3e3);
-  font-size: 13px;
-  line-height: 1.6;
-  min-height: 0;
-}
-
-.note-preview-placeholder {
-  color: rgba(255, 255, 255, 0.2);
-  font-size: 12px;
-}
-
-.note-preview p           { margin: 0 0 5px; }
-.note-preview p:last-child { margin-bottom: 0; }
-.note-preview h1          { font-size: 15px; font-weight: 700; margin: 0 0 5px; }
-.note-preview h2          { font-size: 14px; font-weight: 700; margin: 0 0 5px; }
-.note-preview h3          { font-size: 13px; font-weight: 600; margin: 0 0 4px; }
-.note-preview strong      { font-weight: 700; }
-.note-preview em          { font-style: italic; }
-.note-preview code {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-  padding: 1px 4px;
-  font-size: 11px;
-  font-family: monospace;
-}
-.note-preview pre {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
-  padding: 5px 7px;
-  margin: 4px 0;
-  overflow-x: auto;
-}
-.note-preview pre code     { background: none; padding: 0; }
-.note-preview ul,
-.note-preview ol           { margin: 0 0 5px; padding-left: 16px; }
-.note-preview li           { margin-bottom: 2px; }
-.note-preview blockquote {
-  border-left: 3px solid rgba(255, 255, 255, 0.3);
-  margin: 4px 0;
-  padding-left: 7px;
-  color: rgba(255, 255, 255, 0.6);
-}
-.note-preview a            { color: #60a5fa; text-decoration: underline; }
-.note-preview hr {
-  border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  margin: 6px 0;
-}
-
 /* ---- Resize handle ---- */
 .note-resize-handle {
   position: absolute;
-  bottom: 0;
   right: 0;
+  bottom: 0;
   width: 16px;
   height: 16px;
-  cursor: se-resize;
-  background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.15) 50%);
-  border-radius: 0 0 8px 0;
+  cursor: nwse-resize;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 10;
+  /* Draw a small corner indicator using a border trick */
+  border-right: 3px solid rgba(255, 255, 255, 0.25);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0 0 6px 0;
+}
+
+.sticky-note:hover .note-resize-handle {
+  opacity: 1;
 }
 
 .note-resize-handle:hover {
-  background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.3) 50%);
+  border-right-color: rgba(255, 255, 255, 0.55);
+  border-bottom-color: rgba(255, 255, 255, 0.55);
+}
+
+.note-resize-handle:active {
+  border-right-color: rgba(255, 255, 255, 0.8);
+  border-bottom-color: rgba(255, 255, 255, 0.8);
 }

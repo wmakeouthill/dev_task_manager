@@ -1,5 +1,5 @@
 import { useUseCases } from '../hooks';
-import { Hero, Features, Download } from '../components';
+import { Hero, Features, NotesShowcase, Download } from '../components';
 
 export function HomePage() {
   const {
@@ -26,6 +26,7 @@ export function HomePage() {
         onResume={resume}
       />
       <Features />
+      <NotesShowcase />
       <Download />
     </>
   );

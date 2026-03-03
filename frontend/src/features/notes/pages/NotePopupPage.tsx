@@ -47,6 +47,7 @@ export function NotePopupPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [isEditing, setIsEditing] = useState(false)
+  const [isSplit, setIsSplit] = useState(false)   // side-by-side live preview
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
 
@@ -215,13 +216,19 @@ export function NotePopupPage() {
         />
         <button
           type="button"
+          className={`popup-btn${isSplit ? ' popup-btn--active' : ''}`}
+          title={isSplit ? 'Edição simples' : 'Pré-visualizar enquanto edita'}
+          onClick={() => { setIsSplit(v => !v); setIsEditing(true) }}
+        >⊟</button>
+        <button
+          type="button"
           className="popup-close"
           title="Fechar"
           onClick={() => { postToWpf('close'); window.close() }}
         >✕</button>
       </div>
 
-      <div className="popup-body">
+      <div className={`popup-body${isSplit ? ' popup-body--split' : ''}`}>
         {aiLoading && (
           <div className="popup-ai-loading">
             <span className="popup-ai-dot" />
@@ -235,7 +242,28 @@ export function NotePopupPage() {
           </div>
         )}
 
-        {isEditing || aiLoading ? (
+        {/* Split mode: textarea left + preview right, both always visible */}
+        {isSplit ? (
+          <div className="popup-split">
+            <textarea
+              ref={textareaRef}
+              className="popup-textarea popup-split-editor"
+              value={content}
+              onChange={handleContentChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Escreva sua nota..."
+              disabled={aiLoading}
+              autoFocus
+            />
+            <div className="popup-split-divider" />
+            <div className="popup-preview popup-split-preview">
+              {content
+                ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                : <span className="popup-preview-placeholder">Pré-visualização...</span>
+              }
+            </div>
+          </div>
+        ) : isEditing || aiLoading ? (
           <textarea
             ref={textareaRef}
             className="popup-textarea"
@@ -248,21 +276,16 @@ export function NotePopupPage() {
             autoFocus
           />
         ) : (
-          <div
-            className="popup-preview"
-            onClick={enterEditMode}
-            title="Clique para editar"
-          >
-            {content ? (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-            ) : (
-              <span className="popup-preview-placeholder">Clique para editar...</span>
-            )}
+          <div className="popup-preview" onClick={enterEditMode} title="Clique para editar">
+            {content
+              ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+              : <span className="popup-preview-placeholder">Clique para editar...</span>
+            }
           </div>
         )}
 
         <SlashCommandMenu
-          open={isEditing && slashOpen && filteredCommands.length > 0}
+          open={(isEditing || isSplit) && slashOpen && filteredCommands.length > 0}
           filteredCommands={filteredCommands}
           selectedIndex={slashIndex}
           onSelectIndex={setSlashIndex}

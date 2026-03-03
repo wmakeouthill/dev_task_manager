@@ -1,4 +1,13 @@
-import { useRef, useCallback, useState } from 'react'
+import { useState, useEffect } from 'react'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable'
 import { useNotes, useCreateNote, useUpdateNotePosition } from '../api/useNotes'
 import { StickyNote } from '../components/StickyNote/StickyNote'
 import type { StickyNoteColor } from '../types'
@@ -12,29 +21,50 @@ export function NotesPage() {
   const createNote     = useCreateNote()
   const updatePosition = useUpdateNotePosition()
 
-  const [zCounterMap, setZCounterMap] = useState<Map<string, number>>(new Map())
-  const zCounter  = useRef(1)
-  const canvasRef = useRef<HTMLDivElement>(null)
+  // Client-side ordered IDs (positionX used as sort index on the server)
+  const [orderedIds, setOrderedIds] = useState<string[]>([])
 
-  const handleAddNote = useCallback(() => {
+  const noteIdKey = [...notes].map(n => n.id).sort().join(',')
+  useEffect(() => {
+    if (notes.length === 0) { setOrderedIds([]); return }
+    const sorted = [...notes].sort((a, b) => a.positionX - b.positionX)
+    setOrderedIds(prev => {
+      const existing = prev.filter(id => notes.some(n => n.id === id))
+      const added    = sorted.map(n => n.id).filter(id => !prev.includes(id))
+      return [...existing, ...added]
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noteIdKey])
+
+  const orderedNotes = orderedIds
+    .map(id => notes.find(n => n.id === id))
+    .filter(Boolean) as typeof notes
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  )
+
+  const handleAddNote = () => {
     const color = DEFAULT_COLORS[colorIndex % DEFAULT_COLORS.length]
     colorIndex++
-    const canvas     = canvasRef.current
-    const scrollX    = canvas?.scrollLeft ?? 0
-    const scrollY    = canvas?.scrollTop  ?? 0
-    const offsetStep = (notes.length % 8) * 24
-    createNote.mutate({ title: '', content: '', color, positionX: 40 + offsetStep + scrollX, positionY: 40 + offsetStep + scrollY })
-  }, [notes.length, createNote])
+    createNote.mutate({ title: '', content: '', color, positionX: notes.length, positionY: 0 })
+  }
 
-  const handleBringToFront = useCallback((id: string) => {
-    zCounter.current++
-    const z = zCounter.current
-    setZCounterMap(prev => new Map(prev).set(id, z))
-    const note = notes.find(n => n.id === id)
-    if (note) {
-      updatePosition.mutate({ id, data: { positionX: note.positionX, positionY: note.positionY, width: note.width, height: note.height, zIndex: z } })
-    }
-  }, [notes, updatePosition])
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    setOrderedIds(ids => {
+      const oldIndex = ids.indexOf(active.id as string)
+      const newIndex = ids.indexOf(over.id as string)
+      const newIds = arrayMove(ids, oldIndex, newIndex)
+      updatePosition.mutate({
+        id: active.id as string,
+        data: { positionX: newIndex, positionY: 0, width: 270, height: 220, zIndex: 0 },
+      })
+      return newIds
+    })
+  }
 
   return (
     <div className="notes-page">
@@ -42,7 +72,7 @@ export function NotesPage() {
         <div className="notes-page-title-row">
           <h1 className="page-title" style={{ margin: 0 }}>📌 Notas</h1>
           <p className="notes-page-subtitle">
-            Sticky notes livres — arraste, redimensione, destaque com IA. Use ⧉ para abrir como janela flutuante.
+            Arraste ⠿ para reordenar · ▲ para minimizar · ⧉ para janela flutuante · <code>/</code> para formatar · <code>/ia</code> para IA
           </p>
         </div>
         <div className="notes-page-actions">
@@ -57,7 +87,7 @@ export function NotesPage() {
         </div>
       </div>
 
-      <div className="notes-canvas-wrap">
+      <div className="notes-body">
         {isLoading && <div className="notes-loading"><span>Carregando notas...</span></div>}
 
         {!isLoading && notes.length === 0 && (
@@ -71,19 +101,23 @@ export function NotesPage() {
               <br />
               Use <code>⧉</code> para abrir a nota como uma janela flutuante independente.
             </p>
-            <button type="button" className="btn btn-primary" onClick={handleAddNote}>+ Nova nota</button>
+            <button type="button" className="btn btn-primary" style={{ pointerEvents: 'all' }} onClick={handleAddNote}>
+              + Nova nota
+            </button>
           </div>
         )}
 
-        <div ref={canvasRef} className="notes-canvas">
-          {notes.map(note => (
-            <StickyNote
-              key={note.id}
-              note={{ ...note, zIndex: zCounterMap.get(note.id) ?? note.zIndex }}
-              onBringToFront={handleBringToFront}
-            />
-          ))}
-        </div>
+        {!isLoading && orderedNotes.length > 0 && (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={orderedIds} strategy={rectSortingStrategy}>
+              <div className="notes-grid">
+                {orderedNotes.map(note => (
+                  <StickyNote key={note.id} note={note} />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        )}
       </div>
     </div>
   )

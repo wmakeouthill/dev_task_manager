@@ -37,6 +37,12 @@ const FEATURES: Feature[] = [
     title: 'Dados Locais',
     description: 'SQLite no backend .NET. Seus dados ficam no seu controle, sem dependência de nuvem.',
   },
+  {
+    id: '7',
+    icon: '📌',
+    title: 'Sticky Notes',
+    description: 'Notas coloridas com Markdown, drag-and-drop para reordenar, redimensionamento livre e suporte a IA com /ia diretamente no texto.',
+  },
 ];
 
 export function useFeatures() {

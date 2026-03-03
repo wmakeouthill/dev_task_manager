@@ -1,0 +1,301 @@
+/* ============================================================
+   NotesShowcase — landing page section
+   ============================================================ */
+
+.notes-showcase {
+  background: linear-gradient(180deg, #141416 0%, #0a0a0b 60%, #141416 100%);
+}
+
+/* ---- Layout ---- */
+.notes-showcase-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 60px;
+  align-items: start;
+}
+
+/* ---- Mock grid ---- */
+.notes-mock-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ---- Mock note card ---- */
+.mock-note {
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.35);
+  background: var(--mock-bg, #2d2a00);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  width: 210px;
+  flex-shrink: 0;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mock-note:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.mock-note--minimized {
+  width: 210px;
+}
+
+/* ---- Mock header ---- */
+.mock-note-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 8px;
+  background: var(--mock-header, #3d3800);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px 8px 0 0;
+  flex-shrink: 0;
+}
+
+.mock-note--minimized .mock-note-header {
+  border-radius: 8px;
+  border-bottom: none;
+}
+
+.mock-drag-icon {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.28);
+  flex-shrink: 0;
+  line-height: 1;
+  cursor: grab;
+}
+
+.mock-note-title {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.mock-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.mock-btn {
+  font-size: 11px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.38);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* ---- Mock body ---- */
+.mock-note-body {
+  padding: 8px;
+  min-height: 80px;
+  max-height: 160px;
+  overflow: hidden;
+  position: relative;
+}
+
+.mock-note-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mock-line {
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.line-heading {
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.line-bold {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+}
+
+.line-item {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.line-done {
+  color: rgba(52, 211, 153, 0.7);
+}
+
+.line-code {
+  color: rgba(167, 139, 250, 0.8);
+  font-family: monospace;
+  background: rgba(167, 139, 250, 0.08);
+  border-radius: 3px;
+  padding: 0 3px;
+  font-size: 10px;
+}
+
+.line-text {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Fade-out bottom of body */
+.mock-note-body::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 20px;
+  height: 28px;
+  background: linear-gradient(transparent, var(--mock-bg, #2d2a00));
+  pointer-events: none;
+}
+
+/* Feature tag badge */
+.mock-note-tag {
+  position: absolute;
+  bottom: 5px;
+  left: 8px;
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(167, 139, 250, 0.7);
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 1px 6px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  z-index: 1;
+}
+
+/* Resize handle hint */
+.mock-resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  border-right: 3px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0 0 6px 0;
+}
+
+/* ---- Highlights sidebar ---- */
+.notes-highlights {
+  position: sticky;
+  top: 80px;
+}
+
+.notes-highlights-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xl);
+}
+
+.notes-highlight-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.notes-highlight-item {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: flex-start;
+}
+
+.notes-highlight-icon {
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 14px;
+  color: var(--color-primary-light);
+}
+
+.notes-highlight-item > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.notes-highlight-item strong {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+
+.notes-highlight-item p {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.notes-highlight-item code {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--color-primary-light);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .notes-showcase-layout {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-3xl);
+  }
+
+  .notes-highlights {
+    position: static;
+  }
+
+  .notes-highlight-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 640px) {
+  .notes-mock-grid {
+    justify-content: center;
+  }
+
+  .mock-note {
+    width: 160px;
+  }
+
+  .mock-note--minimized {
+    width: 160px;
+  }
+
+  .notes-highlight-list {
+    grid-template-columns: 1fr;
+  }
+}

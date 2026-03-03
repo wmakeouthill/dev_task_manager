@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios'
+import { getAiHeaders } from '@/features/ai'
 import type {
   StickyNote,
   CreateStickyNoteRequest,
@@ -28,5 +29,5 @@ export const noteApi = {
     api.delete(`/notes/${id}`).then(() => undefined),
 
   aiAssist: (data: AiNoteAssistRequest): Promise<AiNoteAssistResponse> =>
-    api.post('/notes/ai-assist', data).then(r => r.data),
+    api.post('/notes/ai-assist', data, { headers: getAiHeaders() }).then(r => r.data),
 }
