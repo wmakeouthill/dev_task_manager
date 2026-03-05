@@ -39,6 +39,7 @@ export interface UpdateStickyNotePositionRequest {
 export interface AiNoteAssistRequest {
   content: string
   action: 'help' | 'fix' | 'organize' | 'expand'
+  instruction?: string
 }
 
 export interface AiNoteAssistResponse {
@@ -49,10 +50,10 @@ export interface AiNoteAssistResponse {
 
 export const NOTE_COLORS: Record<StickyNoteColor, { bg: string; header: string; label: string }> = {
   yellow: { bg: '#2d2a00', header: '#3d3800', label: 'Amarelo' },
-  green:  { bg: '#002d1a', header: '#003d22', label: 'Verde' },
-  pink:   { bg: '#2d001a', header: '#3d0022', label: 'Rosa' },
-  blue:   { bg: '#00132d', header: '#001a3d', label: 'Azul' },
+  green: { bg: '#002d1a', header: '#003d22', label: 'Verde' },
+  pink: { bg: '#2d001a', header: '#3d0022', label: 'Rosa' },
+  blue: { bg: '#00132d', header: '#001a3d', label: 'Azul' },
   purple: { bg: '#1a002d', header: '#22003d', label: 'Roxo' },
   orange: { bg: '#2d1200', header: '#3d1800', label: 'Laranja' },
-  gray:   { bg: '#1e1e1e', header: '#252525', label: 'Cinza' },
+  gray: { bg: '#1e1e1e', header: '#252525', label: 'Cinza' },
 }

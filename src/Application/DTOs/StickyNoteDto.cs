@@ -42,7 +42,8 @@ public record UpdateStickyNotePositionRequest(
 
 public record AiNoteAssistRequest(
     string Content,
-    string Action);
+    string Action,
+    string? Instruction = null);
 
 public record AiNoteAssistResponse(
     string Content,

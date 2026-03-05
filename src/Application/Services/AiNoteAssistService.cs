@@ -10,10 +10,14 @@ public class AiNoteAssistService
     {
         var sw = Stopwatch.StartNew();
 
+        var descriptionWithInstruction = !string.IsNullOrWhiteSpace(request.Instruction)
+            ? $"Instrução do usuário: {request.Instruction}\n\nConteúdo da nota:\n{request.Content}"
+            : request.Content;
+
         var aiRequest = new AiRequest(
             Action: BuildNoteAction(request.Action),
             CardTitle: "Nota",
-            CardDescription: request.Content,
+            CardDescription: descriptionWithInstruction,
             CardStatus: null,
             ChecklistItems: null);
 

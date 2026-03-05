@@ -181,7 +181,153 @@
   opacity: 0.5;
 }
 
-/* ---- Markdown preview ---- */
+/* ---- BlockNote editor wrapper ---- */
+.note-blocknote-wrap {
+  flex: 1;
+  min-height: 40px;
+  overflow: hidden;
+  /* Force BlockNote to fill the note body */
+}
+
+.note-blocknote .bn-container,
+.note-blocknote .bn-editor {
+  --bn-colors-editor-text: var(--text-primary, #e3e3e3);
+  --bn-colors-editor-background: transparent;
+  --bn-colors-menu-text: var(--text-primary, #e3e3e3);
+  --bn-colors-menu-background: var(--bg-overlay, #252525);
+  --bn-colors-hovered-background: rgba(255, 255, 255, 0.07);
+  --bn-colors-selected-background: rgba(99, 102, 241, 0.4);
+  --bn-colors-border: rgba(255, 255, 255, 0.1);
+  --bn-colors-shadow: rgba(0, 0, 0, 0.5);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.note-blocknote .bn-editor {
+  padding: 0;
+  min-height: 36px;
+}
+
+/* Reduce block spacing inside a small sticky note */
+.note-blocknote .bn-block-content {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.note-blocknote .bn-block {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+
+/* ---- dimmed live preview for pending AI command ---- */
+.note-live-preview {
+  color: var(--text-primary, #e3e3e3);
+  font-size: 13px;
+  line-height: 1.6;
+  pointer-events: none;
+  user-select: none;
+  min-height: 40px;
+  /* Mirror all note-preview element styles */
+}
+.note-live-preview p           { margin: 0 0 5px; }
+.note-live-preview p:last-child { margin-bottom: 0; }
+.note-live-preview h1          { font-size: 15px; font-weight: 700; margin: 0 0 5px; }
+.note-live-preview h2          { font-size: 14px; font-weight: 700; margin: 0 0 5px; }
+.note-live-preview h3          { font-size: 13px; font-weight: 600; margin: 0 0 4px; }
+.note-live-preview strong      { font-weight: 700; }
+.note-live-preview em          { font-style: italic; }
+.note-live-preview code {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 11px;
+  font-family: monospace;
+}
+.note-live-preview pre {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  padding: 5px 7px;
+  margin: 4px 0;
+  overflow-x: auto;
+}
+.note-live-preview pre code     { background: none; padding: 0; }
+.note-live-preview ul,
+.note-live-preview ol           { margin: 0 0 5px; padding-left: 16px; }
+.note-live-preview li           { margin-bottom: 2px; }
+.note-live-preview blockquote {
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+  margin: 4px 0;
+  padding-left: 7px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.note-live-preview a            { color: #60a5fa; text-decoration: underline; }
+.note-live-preview hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin: 6px 0;
+}
+.note-live-preview--dimmed {
+  opacity: 0.45;
+  margin-bottom: 6px;
+  max-height: 90px;
+  overflow-y: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+/* Instruction textarea for pending AI command */
+.note-textarea--instruction {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 5px;
+  margin-top: 2px;
+  min-height: 36px;
+  max-height: 80px;
+}
+
+/* ---- Pending AI command bar ---- */
+.note-ai-pending-bar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  margin-bottom: 6px;
+  border-radius: 5px;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  font-size: 11px;
+  color: #c4b5fd;
+}
+
+.note-ai-pending-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.note-ai-pending-label {
+  flex: 1;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note-ai-pending-cancel {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(196, 181, 253, 0.6);
+  padding: 0 1px;
+  font-size: 11px;
+  line-height: 1;
+  transition: color 0.1s;
+  flex-shrink: 0;
+}
+.note-ai-pending-cancel:hover {
+  color: #c4b5fd;
+}
+
+
 .note-preview {
   flex: 1;
   cursor: text;
