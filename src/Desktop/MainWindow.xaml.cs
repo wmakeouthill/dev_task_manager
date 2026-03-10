@@ -13,6 +13,7 @@ namespace DevTaskManager.Desktop;
 public partial class MainWindow : Window
 {
     private bool _webViewReady;
+    private string? _targetUrl;
 
     public MainWindow()
     {
@@ -64,8 +65,13 @@ public partial class MainWindow : Window
         // Cor de fundo enquanto o SPA carrega (evita flash branco)
         AppWebView.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Dark;
 
+        // Força about:blank para limpar qualquer estado de sessão anterior do WebView2.
+        // Sem isso, o WebView2 pode tentar restaurar a última URL visitada (ex: /boards)
+        // antes de a API estar pronta, resultando em "page not found".
+        AppWebView.CoreWebView2.Navigate("about:blank");
+
         // ── Garante que a API está disponível (modo empacotado) ──────────
-        var url = WebApiHostService.FrontendUrl;
+        _targetUrl = WebApiHostService.FrontendUrl;
         if (WebApiHostService.IsPackaged && (Application.Current as App)?.WebApiHost is { } host)
         {
             LoadingText.Text = "Iniciando servidor…";
@@ -88,9 +94,11 @@ public partial class MainWindow : Window
             }
         }
 
-        // ── Navega para o frontend ───────────────────────────────────────
+        // ── Navega para o frontend (sempre root, nunca sub-rota) ─────────
+        // Usar root garante que o React Router inicializa em estado conhecido
+        // independente de qualquer URL salva pelo WebView2.
         LoadingText.Text = "Carregando interface…";
-        AppWebView.Source = new Uri(url);
+        AppWebView.CoreWebView2.Navigate(_targetUrl);
 
         // ── Inicia serviço de lembretes (após a API estar pronta) ────────
         (Application.Current as App)?.StartNotificationService();
@@ -142,22 +150,48 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Esconde o overlay de carregamento quando o SPA termina de carregar.
-    /// Mostra erro amigável se a navegação falhou.
+    /// Esconde o overlay quando o SPA carrega com sucesso.
+    /// Ignora navegações intermediárias (about:blank).
+    /// Faz retry automático se a navegação para a URL real falhar.
     /// </summary>
-    private void OnNavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
+    private async void OnNavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
     {
+        // Ignora navegações intermediárias (ex: about:blank durante inicialização)
+        var currentSource = AppWebView.Source?.AbsoluteUri;
+        if (string.IsNullOrEmpty(currentSource) ||
+            currentSource.Equals("about:blank", StringComparison.OrdinalIgnoreCase))
+            return;
+
         if (e.IsSuccess)
         {
             LoadingOverlay.Visibility = Visibility.Collapsed;
+            return;
         }
-        else
+
+        // Navegação falhou — faz até 3 tentativas com intervalo crescente
+        // antes de mostrar a mensagem de erro. Cobre casos onde a API demorou
+        // mais do que o esperado para estar pronta na porta.
+        if (_targetUrl is null) return;
+        for (int attempt = 1; attempt <= 3; attempt++)
         {
-            LoadingText.Text =
-                "Não foi possível carregar a aplicação.\n" +
-                "Verifique se o servidor está rodando\n" +
-                "e tente reabrir o aplicativo.";
+            await Task.Delay(attempt * 1000);
+            if (!_webViewReady) return;
+            try
+            {
+                var ok = await WebApiHostService.IsApiRunningAsync();
+                if (ok)
+                {
+                    AppWebView.CoreWebView2.Navigate(_targetUrl);
+                    return;
+                }
+            }
+            catch { /* WebView2 pode estar sendo destruído */ return; }
         }
+
+        LoadingText.Text =
+            "Não foi possível carregar a aplicação.\n" +
+            "Verifique se o servidor está rodando\n" +
+            "e tente reabrir o aplicativo.";
     }
 
     /// <summary>
