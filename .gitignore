@@ -129,6 +129,12 @@ htmlcov/
 TestResults/
 
 # =============================
+# Build / Publish artefatos
+# =============================
+# wwwroot gerado pelo publish-portable.ps1 (cópia do frontend/dist)
+src/WebApi/wwwroot/
+
+# =============================
 # Banco de dados (SQLite local)
 # =============================
 # Arquivos .db são gerados localmente; o schema fica nas migrações EF Core
