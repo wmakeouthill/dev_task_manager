@@ -7,8 +7,17 @@ namespace DevTaskManager.Infrastructure.Repositories;
 
 public class StickyNoteRepository(AppDbContext context) : IStickyNoteRepository
 {
-    public async Task<IReadOnlyList<StickyNote>> ListAsync(CancellationToken ct = default)
-        => await context.StickyNotes.OrderBy(n => n.ZIndex).ThenBy(n => n.CreatedAt).ToListAsync(ct);
+    public async Task<IReadOnlyList<StickyNote>> ListAsync(Guid? boardId = null, CancellationToken ct = default)
+    {
+        var query = context.StickyNotes.AsQueryable();
+
+        if (boardId.HasValue)
+            query = query.Where(n => n.BoardId == boardId.Value);
+        else
+            query = query.Where(n => n.BoardId == null);
+
+        return await query.OrderBy(n => n.ZIndex).ThenBy(n => n.CreatedAt).ToListAsync(ct);
+    }
 
     public async Task<StickyNote?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await context.StickyNotes.FirstOrDefaultAsync(n => n.Id == id, ct);

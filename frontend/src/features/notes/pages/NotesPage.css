@@ -48,6 +48,22 @@
   white-space: nowrap;
 }
 
+.notes-project-btn {
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary, #e3e3e3);
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.notes-project-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 /* ---- Body wrapper ---- */
 .notes-body {
   flex: 1;

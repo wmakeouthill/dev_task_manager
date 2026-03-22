@@ -7,9 +7,9 @@ namespace DevTaskManager.Application.Services;
 
 public class StickyNoteService(IStickyNoteRepository repository)
 {
-    public async Task<IReadOnlyList<StickyNoteDto>> ListAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<StickyNoteDto>> ListAsync(Guid? boardId = null, CancellationToken ct = default)
     {
-        var notes = await repository.ListAsync(ct);
+        var notes = await repository.ListAsync(boardId, ct);
         return notes.Select(StickyNoteDto.From).ToList();
     }
 
@@ -27,7 +27,8 @@ public class StickyNoteService(IStickyNoteRepository repository)
             request.Content,
             request.Color,
             request.PositionX,
-            request.PositionY);
+            request.PositionY,
+            request.BoardId);
         var saved = await repository.SaveAsync(note, ct);
         return StickyNoteDto.From(saved);
     }

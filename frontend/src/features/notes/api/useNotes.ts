@@ -9,44 +9,52 @@ import type {
 
 const QUERY_KEY = ['sticky-notes']
 
-export function useNotes() {
+export function useNotes(boardId?: string) {
   return useQuery({
-    queryKey: QUERY_KEY,
-    queryFn: noteApi.list,
+    queryKey: boardId ? [...QUERY_KEY, boardId] : QUERY_KEY,
+    queryFn: () => noteApi.list(boardId),
   })
 }
 
-export function useCreateNote() {
+export function useCreateNote(boardId?: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateStickyNoteRequest) => noteApi.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: boardId ? [...QUERY_KEY, boardId] : QUERY_KEY })
+    },
   })
 }
 
-export function useUpdateNote() {
+export function useUpdateNote(boardId?: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateStickyNoteRequest }) =>
       noteApi.update(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: boardId ? [...QUERY_KEY, boardId] : QUERY_KEY })
+    },
   })
 }
 
-export function useUpdateNotePosition() {
+export function useUpdateNotePosition(boardId?: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateStickyNotePositionRequest }) =>
       noteApi.updatePosition(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: boardId ? [...QUERY_KEY, boardId] : QUERY_KEY })
+    },
   })
 }
 
-export function useDeleteNote() {
+export function useDeleteNote(boardId?: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => noteApi.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: boardId ? [...QUERY_KEY, boardId] : QUERY_KEY })
+    },
   })
 }
 

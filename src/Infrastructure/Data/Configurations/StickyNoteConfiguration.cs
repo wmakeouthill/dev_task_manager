@@ -10,6 +10,7 @@ public class StickyNoteConfiguration : IEntityTypeConfiguration<StickyNote>
     {
         builder.ToTable("sticky_notes");
         builder.HasKey(n => n.Id);
+        builder.Property(n => n.BoardId).IsRequired(false);
         builder.Property(n => n.Title).HasMaxLength(200);
         builder.Property(n => n.Content).HasMaxLength(10000);
         builder.Property(n => n.Color).IsRequired().HasMaxLength(50).HasDefaultValue("yellow");

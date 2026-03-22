@@ -12,13 +12,13 @@ public static class StickyNoteEndpoints
         var group = app.MapGroup("/notes")
             .WithTags("StickyNotes");
 
-        group.MapGet("/", async (StickyNoteService service, CancellationToken ct) =>
+        group.MapGet("/", async (Guid? boardId, StickyNoteService service, CancellationToken ct) =>
         {
-            var notes = await service.ListAsync(ct);
+            var notes = await service.ListAsync(boardId, ct);
             return Results.Ok(notes);
         })
         .WithName("ListStickyNotes")
-        .WithSummary("Lista todas as sticky notes")
+        .WithSummary("Lista sticky notes (globais ou por board)")
         .Produces<IReadOnlyList<StickyNoteDto>>();
 
         group.MapPost("/", async (CreateStickyNoteRequest request, StickyNoteService service, CancellationToken ct) =>

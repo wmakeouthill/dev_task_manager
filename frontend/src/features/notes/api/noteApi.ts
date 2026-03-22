@@ -10,8 +10,8 @@ import type {
 } from '../types'
 
 export const noteApi = {
-  list: (): Promise<StickyNote[]> =>
-    api.get('/notes').then(r => r.data),
+  list: (boardId?: string): Promise<StickyNote[]> =>
+    api.get('/notes', { params: boardId ? { boardId } : undefined }).then(r => r.data),
 
   get: (id: string): Promise<StickyNote> =>
     api.get(`/notes/${id}`).then(r => r.data),

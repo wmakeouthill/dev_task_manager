@@ -1,5 +1,6 @@
 export interface StickyNote {
   id: string
+  boardId: string | null
   title: string
   content: string
   color: StickyNoteColor
@@ -20,6 +21,7 @@ export interface CreateStickyNoteRequest {
   color: StickyNoteColor
   positionX: number
   positionY: number
+  boardId?: string
 }
 
 export interface UpdateStickyNoteRequest {

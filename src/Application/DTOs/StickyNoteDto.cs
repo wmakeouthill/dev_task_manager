@@ -4,6 +4,7 @@ namespace DevTaskManager.Application.DTOs;
 
 public record StickyNoteDto(
     Guid Id,
+    Guid? BoardId,
     string Title,
     string Content,
     string Color,
@@ -16,7 +17,7 @@ public record StickyNoteDto(
     DateTime UpdatedAt)
 {
     public static StickyNoteDto From(StickyNote n) => new(
-        n.Id, n.Title, n.Content, n.Color,
+        n.Id, n.BoardId, n.Title, n.Content, n.Color,
         n.PositionX, n.PositionY, n.Width, n.Height, n.ZIndex,
         n.CreatedAt, n.UpdatedAt);
 }
@@ -26,7 +27,8 @@ public record CreateStickyNoteRequest(
     string Content,
     string Color,
     double PositionX,
-    double PositionY);
+    double PositionY,
+    Guid? BoardId = null);
 
 public record UpdateStickyNoteRequest(
     string Title,

@@ -3,6 +3,7 @@ namespace DevTaskManager.Domain.Entities;
 public class StickyNote
 {
     public Guid Id { get; private set; }
+    public Guid? BoardId { get; private set; }
     public string Title { get; private set; } = string.Empty;
     public string Content { get; private set; } = string.Empty;
     public string Color { get; private set; } = "yellow";
@@ -16,11 +17,12 @@ public class StickyNote
 
     private StickyNote() { }
 
-    public static StickyNote Criar(string title, string content, string color, double x, double y)
+    public static StickyNote Criar(string title, string content, string color, double x, double y, Guid? boardId = null)
     {
         return new StickyNote
         {
             Id = Guid.NewGuid(),
+            BoardId = boardId,
             Title = title.Trim(),
             Content = content.Trim(),
             Color = color.Trim(),

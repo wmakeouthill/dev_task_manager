@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   DndContext,
   closestCenter,
@@ -17,6 +18,7 @@ const DEFAULT_COLORS: StickyNoteColor[] = ['yellow', 'green', 'pink', 'blue', 'p
 let colorIndex = 0
 
 export function NotesPage() {
+  const navigate = useNavigate()
   const { data: notes = [], isLoading } = useNotes()
   const createNote     = useCreateNote()
   const updatePosition = useUpdateNotePosition()
@@ -70,12 +72,19 @@ export function NotesPage() {
     <div className="notes-page">
       <div className="notes-page-header">
         <div className="notes-page-title-row">
-          <h1 className="page-title" style={{ margin: 0 }}>📌 Notas</h1>
+          <h1 className="page-title" style={{ margin: 0 }}>📌 Notas Globais</h1>
           <p className="notes-page-subtitle">
             Arraste ⠿ para reordenar · ▲ para minimizar · ⧉ para janela flutuante · <code>/</code> para formatar · <code>/ia</code> para IA
           </p>
         </div>
         <div className="notes-page-actions">
+          <button
+            type="button"
+            className="btn btn-secondary notes-project-btn"
+            onClick={() => navigate('/notes/projects')}
+          >
+            Notas por Projeto
+          </button>
           <button
             type="button"
             className="btn btn-primary notes-add-btn"

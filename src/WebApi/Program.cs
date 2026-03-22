@@ -220,7 +220,7 @@ static async Task EnsureAllTablesAsync(AppDbContext db)
         "CREATE INDEX IF NOT EXISTS IX_reminders_Status_ScheduleAt ON reminders(Status, ScheduleAt)",
         "CREATE TABLE IF NOT EXISTS insights (Id TEXT NOT NULL PRIMARY KEY, CardId TEXT NOT NULL, CardTitle TEXT NOT NULL, Status TEXT NOT NULL, Content TEXT NOT NULL, Provider TEXT NOT NULL, Action TEXT NOT NULL, DurationMs REAL NOT NULL, CreatedAt TEXT NOT NULL)",
         "CREATE INDEX IF NOT EXISTS IX_insights_CardId ON insights(CardId)",
-        "CREATE TABLE IF NOT EXISTS sticky_notes (Id TEXT NOT NULL PRIMARY KEY, Title TEXT NOT NULL DEFAULT '', Content TEXT NOT NULL DEFAULT '', Color TEXT NOT NULL DEFAULT 'yellow', PositionX REAL NOT NULL DEFAULT 0, PositionY REAL NOT NULL DEFAULT 0, Width REAL NOT NULL DEFAULT 280, Height REAL NOT NULL DEFAULT 220, ZIndex INTEGER NOT NULL DEFAULT 0, CreatedAt TEXT NOT NULL, UpdatedAt TEXT NOT NULL)"
+        "CREATE TABLE IF NOT EXISTS sticky_notes (Id TEXT NOT NULL PRIMARY KEY, BoardId TEXT NULL, Title TEXT NOT NULL DEFAULT '', Content TEXT NOT NULL DEFAULT '', Color TEXT NOT NULL DEFAULT 'yellow', PositionX REAL NOT NULL DEFAULT 0, PositionY REAL NOT NULL DEFAULT 0, Width REAL NOT NULL DEFAULT 280, Height REAL NOT NULL DEFAULT 220, ZIndex INTEGER NOT NULL DEFAULT 0, CreatedAt TEXT NOT NULL, UpdatedAt TEXT NOT NULL)"
     };
     foreach (var sql in statements)
         await db.Database.ExecuteSqlRawAsync(sql);
@@ -236,9 +236,8 @@ static async Task ApplySchemaUpgradesAsync(AppDbContext db)
     // Cada entrada: (tabela, coluna, tipo SQL, valor default opcional)
     var columnUpgrades = new (string table, string column, string sqlType, string? defaultValue)[]
     {
-        // v1.1 — Exemplo de futuras colunas:
-        // ("cards", "Priority", "TEXT NULL", null),
-        // ("cards", "Labels", "TEXT NULL", null),
+        // v1.1 — BoardId para vincular notas a projetos
+        ("sticky_notes", "BoardId", "TEXT NULL", null),
     };
 
     foreach (var (table, column, sqlType, defaultValue) in columnUpgrades)

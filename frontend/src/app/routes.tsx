@@ -6,7 +6,7 @@ import { CardDetailPage } from '@/features/cards/pages/CardDetailPage/CardDetail
 import { RemindersPage } from '@/features/reminders/pages/RemindersPage'
 import { SettingsPage } from '@/features/settings'
 import { InsightsPage } from '@/features/ai/pages/InsightsPage'
-import { NotesPage } from '@/features/notes'
+import { NotesPage, ProjectNotesPage } from '@/features/notes'
 import { NotePopupPage } from '@/features/notes/pages/NotePopupPage'
 
 export function AppRoutes() {
@@ -22,6 +22,7 @@ export function AppRoutes() {
         <Route path="/cards/:cardId" element={<CardDetailPage />} />
         <Route path="/reminders" element={<RemindersPage />} />
         <Route path="/notes" element={<NotesPage />} />
+        <Route path="/notes/projects" element={<ProjectNotesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/insights" element={<InsightsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
