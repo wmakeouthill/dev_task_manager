@@ -85,7 +85,7 @@ internal sealed class ChildProcessGuard : IDisposable
 /// </summary>
 public sealed class WebApiHostService : IDisposable
 {
-    private const string BaseUrl = "http://localhost:5011";
+    public const string BaseUrl = "http://localhost:5011";
     private const string HealthUrl = BaseUrl + "/health";
     private const int StartupTimeoutSeconds = 30;
     private const int PollIntervalMs = 500;
@@ -124,20 +124,36 @@ public sealed class WebApiHostService : IDisposable
     }
 
     /// <summary>
-    /// Diretório base do app (pasta do exe). Com single-file, AppContext.BaseDirectory
-    /// aponta para a pasta de extração (temp), não para Program Files. Por isso usamos
-    /// ProcessPath como fonte primária - retorna a pasta real do executável.
+    /// Diretório base do app: testa múltiplos candidatos em ordem e retorna o primeiro
+    /// que contém DevTaskManager.WebApi.exe. Com single-file + IncludeNativeLibrariesForSelfExtract,
+    /// AppContext.BaseDirectory aponta para a pasta de extração temporária — por isso
+    /// Environment.ProcessPath (caminho real do exe) é o candidato primário.
     /// </summary>
     private static string GetAppBaseDirectory()
     {
+        var candidates = new List<string?>();
+
         var exePath = Environment.ProcessPath;
         if (!string.IsNullOrEmpty(exePath))
+            candidates.Add(Path.GetDirectoryName(exePath));
+
+        candidates.Add(AppContext.BaseDirectory);
+        candidates.Add(Directory.GetCurrentDirectory());
+
+        foreach (var dir in candidates.Where(d => !string.IsNullOrEmpty(d)))
         {
-            var exeDir = Path.GetDirectoryName(exePath);
-            if (!string.IsNullOrEmpty(exeDir))
-                return exeDir;
+            if (File.Exists(Path.Combine(dir!, "DevTaskManager.WebApi.exe")))
+            {
+                LogApiFailure($"[GetAppBaseDirectory] WebApi.exe encontrado em: {dir}");
+                return dir!;
+            }
         }
-        return AppContext.BaseDirectory ?? ".";
+
+        // Nenhum candidato contém WebApi.exe — logar para diagnóstico
+        var tried = string.Join(" | ", candidates.Where(d => d != null));
+        LogApiFailure($"[GetAppBaseDirectory] WebApi.exe NÃO encontrado. Tentativas: {tried}");
+
+        return candidates.FirstOrDefault(d => !string.IsNullOrEmpty(d)) ?? ".";
     }
 
     /// <summary>
@@ -178,26 +194,20 @@ public sealed class WebApiHostService : IDisposable
         // Isso evita que um processo zumbi segure a porta 5011 ou o banco de dados.
         KillOrphanedWebApiProcesses();
 
-        // Pequena espera para garantir que a porta foi liberada pelo SO
+        // Se a API já está respondendo (nenhum órfão foi encontrado ou porta ainda em uso),
+        // não precisa iniciar nada — apenas retornar sucesso.
         if (await IsApiRunningAsync())
-        {
-            // Se após matar os órfãos a porta ainda responde, há outro processo
-            // desconhecido. Aguardamos até ela liberar antes de tentar iniciar.
-            await Task.Delay(1000);
-        }
+            return true;
 
-        if (!IsPackaged)
-        {
-            LogApiFailure("IsPackaged=false", $"BaseDir={GetAppBaseDirectory()}");
-            return false;
-        }
-
+        // Localiza o WebApi.exe via GetAppBaseDirectory (busca em múltiplos caminhos).
+        // Não depende de IsPackaged — se o exe existir, tenta iniciar.
         var baseDir = GetAppBaseDirectory();
         var exePath = Path.Combine(baseDir, "DevTaskManager.WebApi.exe");
         if (!File.Exists(exePath))
             exePath = Path.Combine(baseDir, "DevTaskManager.WebApi");
         if (!File.Exists(exePath))
         {
+            // Exe não encontrado — modo dev (Vite) ou instalação incompleta
             LogApiFailure("WebApi.exe não encontrado", $"BaseDir={baseDir}");
             return false;
         }

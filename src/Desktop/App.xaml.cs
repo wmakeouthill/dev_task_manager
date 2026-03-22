@@ -64,9 +64,11 @@ public partial class App : Application
             return;
         }
 
-        // ── Serviço da API (modo empacotado) ─────────────────────────────
-        if (WebApiHostService.IsPackaged)
-            _webApiHost = new WebApiHostService();
+        // ── Serviço da API ───────────────────────────────────────────────
+        // Sempre cria o host — EnsureApiRunningAsync decide se há WebApi.exe
+        // para iniciar. Isso evita que uma falha na detecção de IsPackaged
+        // impeça o app de tentar iniciar o servidor.
+        _webApiHost = new WebApiHostService();
 
         // ── Janela principal ─────────────────────────────────────────────
         // Criamos manualmente (sem StartupUri) para controlar ordem de init

@@ -70,15 +70,25 @@ public partial class MainWindow : Window
         // antes de a API estar pronta, resultando em "page not found".
         AppWebView.CoreWebView2.Navigate("about:blank");
 
-        // ── Garante que a API está disponível (modo empacotado) ──────────
-        _targetUrl = WebApiHostService.FrontendUrl;
-        if (WebApiHostService.IsPackaged && (Application.Current as App)?.WebApiHost is { } host)
+        // ── Garante que a API está disponível ────────────────────────────
+        // _targetUrl fica null durante o startup para que o NavigationCompleted handler
+        // ignore qualquer evento causado pelo WebView2 restaurando a sessão anterior.
+        // Sem isso, o handler tentaria navegar para a URL default (5173) enquanto a API
+        // ainda está iniciando — causando "page not found" no segundo lançamento.
+
+        if ((Application.Current as App)?.WebApiHost is { } host)
         {
             LoadingText.Text = "Iniciando servidor…";
 
             var ready = await host.EnsureApiRunningAsync();
-            if (!ready)
+            if (ready)
             {
+                // API iniciada ou já estava rodando — usar URL de produção
+                _targetUrl = WebApiHostService.BaseUrl;
+            }
+            else if (WebApiHostService.IsPackaged)
+            {
+                // Modo empacotado mas falhou — erro real
                 var logPath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "DevTaskManager", "logs", "api-startup.log");
@@ -92,6 +102,15 @@ public partial class MainWindow : Window
                 Close();
                 return;
             }
+            else
+            {
+                // WebApi.exe não encontrado = modo dev (Vite)
+                _targetUrl = "http://localhost:5173";
+            }
+        }
+        else
+        {
+            _targetUrl = "http://localhost:5173";
         }
 
         // ── Navega para o frontend (sempre root, nunca sub-rota) ─────────
