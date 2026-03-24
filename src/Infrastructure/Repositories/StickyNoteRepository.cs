@@ -19,6 +19,12 @@ public class StickyNoteRepository(AppDbContext context) : IStickyNoteRepository
         return await query.OrderBy(n => n.ZIndex).ThenBy(n => n.CreatedAt).ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<StickyNote>> ListRecentAsync(int limit, CancellationToken ct = default)
+        => await context.StickyNotes
+            .OrderByDescending(n => n.UpdatedAt)
+            .Take(limit)
+            .ToListAsync(ct);
+
     public async Task<StickyNote?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await context.StickyNotes.FirstOrDefaultAsync(n => n.Id == id, ct);
 

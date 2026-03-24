@@ -58,6 +58,13 @@ export function useDeleteNote(boardId?: string) {
   })
 }
 
+export function useRecentNotes(limit = 5) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, 'recent', limit],
+    queryFn: () => noteApi.listRecent(limit),
+  })
+}
+
 export function useAiNoteAssist() {
   return useMutation({
     mutationFn: (data: AiNoteAssistRequest) => noteApi.aiAssist(data),

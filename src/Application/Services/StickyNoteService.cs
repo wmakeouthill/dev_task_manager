@@ -13,6 +13,12 @@ public class StickyNoteService(IStickyNoteRepository repository)
         return notes.Select(StickyNoteDto.From).ToList();
     }
 
+    public async Task<IReadOnlyList<StickyNoteDto>> ListRecentAsync(int limit = 5, CancellationToken ct = default)
+    {
+        var notes = await repository.ListRecentAsync(limit, ct);
+        return notes.Select(StickyNoteDto.From).ToList();
+    }
+
     public async Task<StickyNoteDto> GetAsync(Guid id, CancellationToken ct = default)
     {
         var note = await repository.GetByIdAsync(id, ct)

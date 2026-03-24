@@ -12,6 +12,15 @@ public static class StickyNoteEndpoints
         var group = app.MapGroup("/notes")
             .WithTags("StickyNotes");
 
+        group.MapGet("/recent", async (int? limit, StickyNoteService service, CancellationToken ct) =>
+        {
+            var notes = await service.ListRecentAsync(limit ?? 5, ct);
+            return Results.Ok(notes);
+        })
+        .WithName("ListRecentStickyNotes")
+        .WithSummary("Lista as N sticky notes mais recentes (globais e por projeto)")
+        .Produces<IReadOnlyList<StickyNoteDto>>();
+
         group.MapGet("/", async (Guid? boardId, StickyNoteService service, CancellationToken ct) =>
         {
             var notes = await service.ListAsync(boardId, ct);

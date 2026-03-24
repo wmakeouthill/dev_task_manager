@@ -5,6 +5,8 @@ import { useReminders } from '@/features/reminders'
 import { useAiAction } from '@/features/ai'
 import { MarkdownWithCode } from '@/shared/components/MarkdownWithCode'
 import { CardPreviewModal } from '@/shared/components/CardPreviewModal'
+import { useRecentNotes } from '@/features/notes/api/useNotes'
+import { NOTE_COLORS } from '@/features/notes/types'
 
 const RECENT_CARDS_PAGE_SIZE = 5
 
@@ -320,6 +322,9 @@ export function HomePage() {
           </div>
         </section>
 
+        {/* Recent notes */}
+        <RecentNotesWidget />
+
         {/* AI Daily Insight */}
         <section className="card home-section home-section-ai-daily">
           <h2 className="section-title">🤖 Insight do Dia (IA)</h2>
@@ -365,6 +370,64 @@ export function HomePage() {
         />
       )}
     </div>
+  )
+}
+
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/[*_`#>~\-[\]()]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 100)
+}
+
+function RecentNotesWidget() {
+  const navigate = useNavigate()
+  const { data: notes = [], isLoading } = useRecentNotes(6)
+
+  return (
+    <section className="card home-section home-section-notas">
+      <div className="home-section-notas-header">
+        <h2 className="section-title" style={{ margin: 0 }}>📌 Notas recentes</h2>
+        <div className="home-section-notas-actions">
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigate('/notes')}>
+            Globais
+          </button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigate('/notes/projects')}>
+            Por projeto
+          </button>
+        </div>
+      </div>
+
+      {isLoading && <p className="loading-text">Carregando notas...</p>}
+
+      {!isLoading && notes.length === 0 && (
+        <p className="loading-text">Nenhuma nota criada ainda.</p>
+      )}
+
+      {!isLoading && notes.length > 0 && (
+        <ul className="home-notes-list">
+          {notes.map(note => {
+            const colors = NOTE_COLORS[note.color as keyof typeof NOTE_COLORS] ?? NOTE_COLORS.yellow
+            const snippet = stripMarkdown(note.content)
+            const destination = note.boardId ? '/notes/projects' : '/notes'
+            return (
+              <li key={note.id} className="home-note-item" onClick={() => navigate(destination)}>
+                <span className="home-note-dot" style={{ background: colors.header }} />
+                <div className="home-note-info">
+                  <span className="home-note-title">{note.title || 'Sem título'}</span>
+                  {snippet && <span className="home-note-snippet">{snippet}</span>}
+                </div>
+                <span className={`home-note-badge ${note.boardId ? 'home-note-badge--project' : 'home-note-badge--global'}`}>
+                  {note.boardId ? 'Projeto' : 'Global'}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </section>
   )
 }
 

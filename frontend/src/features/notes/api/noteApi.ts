@@ -13,6 +13,9 @@ export const noteApi = {
   list: (boardId?: string): Promise<StickyNote[]> =>
     api.get('/notes', { params: boardId ? { boardId } : undefined }).then(r => r.data),
 
+  listRecent: (limit = 5): Promise<StickyNote[]> =>
+    api.get('/notes/recent', { params: { limit } }).then(r => r.data),
+
   get: (id: string): Promise<StickyNote> =>
     api.get(`/notes/${id}`).then(r => r.data),
 
