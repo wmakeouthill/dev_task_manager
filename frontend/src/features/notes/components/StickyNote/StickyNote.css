@@ -110,6 +110,15 @@
   background: rgba(224, 92, 92, 0.15);
 }
 
+.note-btn--active {
+  color: #6ee66e;
+}
+
+.note-btn--active:hover {
+  background: rgba(110, 230, 110, 0.15);
+  color: #6ee66e;
+}
+
 /* ---- Color picker ---- */
 .note-color-picker-wrap {
   position: relative;
@@ -330,7 +339,8 @@
 
 .note-preview {
   flex: 1;
-  cursor: text;
+  cursor: default;
+  user-select: text;
   color: var(--text-primary, #e3e3e3);
   font-size: 13px;
   line-height: 1.6;

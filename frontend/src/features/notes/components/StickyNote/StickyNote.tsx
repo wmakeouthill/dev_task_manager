@@ -64,6 +64,7 @@ export function StickyNote({ note }: StickyNoteProps) {
   const contentRef = useRef(content); contentRef.current = content
   const colorRef   = useRef(color);   colorRef.current   = color
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const loadingBlocksRef = useRef(false)
 
   // Sync server changes when not editing
   useEffect(() => { setTitle(note.title) }, [note.title])
@@ -81,24 +82,29 @@ export function StickyNote({ note }: StickyNoteProps) {
     }, 800)
   }, [note.id, updateNote])
 
-  // BlockNote onChange — debounce-save
+  // BlockNote onChange — debounce-save (skip during initial block load)
   const handleEditorChange = useCallback(async () => {
+    if (loadingBlocksRef.current) return
     const md = (await editor.blocksToMarkdownLossy(editor.document)).trim()
     setContent(md)
     contentRef.current = md
     scheduleSave(md)
   }, [editor, scheduleSave])
 
-  // Enter edit mode: load markdown into BlockNote then focus
+  // Enter edit mode: load markdown into BlockNote BEFORE showing editor
   const enterEditMode = useCallback(async () => {
-    setIsEditing(true)
     try {
       const md = contentRef.current?.trim() || ''
       const blocks = md
         ? await editor.tryParseMarkdownToBlocks(md)
         : [{ type: 'paragraph' as const }]
+      loadingBlocksRef.current = true
       editor.replaceBlocks(editor.document, blocks)
-    } catch { /* ignore */ }
+      loadingBlocksRef.current = false
+    } catch {
+      loadingBlocksRef.current = false
+    }
+    setIsEditing(true)
     setTimeout(() => editor.focus(), 50)
   }, [editor])
 
@@ -288,6 +294,16 @@ export function StickyNote({ note }: StickyNoteProps) {
             onClick={() => setIsMinimized(v => !v)}
           >{isMinimized ? '▼' : '▲'}</button>
 
+          {/* Edit / done */}
+          {!isMinimized && !pendingAiCommand && (
+            <button
+              type="button"
+              className={`note-btn ${isEditing ? 'note-btn--active' : ''}`}
+              title={isEditing ? 'Concluir edição' : 'Editar nota'}
+              onClick={() => isEditing ? exitEditMode() : void enterEditMode()}
+            >{isEditing ? '✓' : '✏️'}</button>
+          )}
+
           {/* Color picker */}
           <div className="note-color-picker-wrap">
             <button type="button" className="note-btn" title="Mudar cor" onClick={() => setShowColorPicker(v => !v)}>🎨</button>
@@ -387,15 +403,8 @@ export function StickyNote({ note }: StickyNoteProps) {
               </MantineProvider>
             </div>
           ) : (
-            /* Preview mode — click to edit */
-            <div
-              className="note-preview"
-              onClick={enterEditMode}
-              role="button"
-              tabIndex={0}
-              onKeyDown={e => e.key === 'Enter' && enterEditMode()}
-              title="Clique para editar"
-            >
+            /* Preview mode — text is selectable; use ✏️ button in header to edit */
+            <div className="note-preview">
               {content
                 ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
                 : <span className="note-preview-placeholder">Clique para editar... (/ para comandos, /ia para IA)</span>
