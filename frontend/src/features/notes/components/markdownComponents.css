@@ -1,0 +1,86 @@
+/* ---- Code block with header (like Notion) ---- */
+.md-code-block {
+  position: relative;
+  margin: 4px 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.md-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  min-height: 26px;
+}
+
+.md-code-lang {
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
+  user-select: none;
+}
+
+.md-code-block pre {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  border: none !important;
+  padding: 8px 10px !important;
+}
+
+.md-code-block pre code {
+  background: none !important;
+  padding: 0 !important;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ---- Blockquote with copy ---- */
+.md-blockquote {
+  position: relative;
+}
+
+.md-blockquote > .md-copy-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.md-blockquote:hover > .md-copy-btn {
+  opacity: 1;
+}
+
+/* ---- Copy button (shared) ---- */
+.md-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 3px;
+  line-height: 1;
+  transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+
+.md-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.md-copy-btn svg {
+  display: block;
+}

@@ -194,8 +194,8 @@
 .note-blocknote-wrap {
   flex: 1;
   min-height: 40px;
-  overflow: hidden;
-  /* Force BlockNote to fill the note body */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .note-blocknote .bn-container,
@@ -472,4 +472,43 @@
 .note-resize-handle:active {
   border-right-color: rgba(255, 255, 255, 0.8);
   border-bottom-color: rgba(255, 255, 255, 0.8);
+}
+
+/* ---- BlockNote code block language selector & header styling ---- */
+.note-blocknote [data-content-type="codeBlock"] {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.note-blocknote [data-content-type="codeBlock"] select,
+.note-blocknote [data-content-type="codeBlock"] [class*="languageSelect"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  padding: 2px 6px !important;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.note-blocknote [data-content-type="codeBlock"] select:hover,
+.note-blocknote [data-content-type="codeBlock"] [class*="languageSelect"]:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.note-blocknote [data-content-type="codeBlock"] select:focus,
+.note-blocknote [data-content-type="codeBlock"] [class*="languageSelect"]:focus {
+  border-color: rgba(99, 102, 241, 0.5) !important;
+}
+
+.note-blocknote [data-content-type="codeBlock"] select option {
+  background: var(--bg-overlay, #252525);
+  color: var(--text-primary, #e3e3e3);
 }

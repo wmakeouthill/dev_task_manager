@@ -14,6 +14,7 @@ import {
 import { getCaretCoordinates } from '@/features/cards/components/SlashCommandMenu/getCaretCoordinates'
 import type { StickyNoteColor } from '../types'
 import { NOTE_COLORS } from '../types'
+import { markdownComponents } from '../components/markdownComponents'
 import './NotePopupPage.css'
 
 const AI_SLASH_COMMANDS: SlashCommand[] = [
@@ -258,7 +259,7 @@ export function NotePopupPage() {
             <div className="popup-split-divider" />
             <div className="popup-preview popup-split-preview">
               {content
-                ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                ? <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{content}</ReactMarkdown>
                 : <span className="popup-preview-placeholder">Pré-visualização...</span>
               }
             </div>
@@ -278,7 +279,7 @@ export function NotePopupPage() {
         ) : (
           <div className="popup-preview" onClick={enterEditMode} title="Clique para editar">
             {content
-              ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+              ? <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{content}</ReactMarkdown>
               : <span className="popup-preview-placeholder">Clique para editar...</span>
             }
           </div>

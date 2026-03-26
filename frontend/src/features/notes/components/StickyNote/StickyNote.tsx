@@ -15,6 +15,7 @@ import '@blocknote/mantine/style.css'
 import type { StickyNote as StickyNoteType, StickyNoteColor } from '../../types'
 import { NOTE_COLORS } from '../../types'
 import { useUpdateNote, useDeleteNote, useAiNoteAssist, useUpdateNotePosition } from '../../api/useNotes'
+import { markdownComponents } from '../markdownComponents'
 import './StickyNote.css'
 
 const schema = BlockNoteSchema.create().extend({
@@ -65,6 +66,9 @@ export function StickyNote({ note }: StickyNoteProps) {
   const colorRef   = useRef(color);   colorRef.current   = color
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const loadingBlocksRef = useRef(false)
+  const enterContentRef = useRef('')
+  const baselineMdRef = useRef('')
+  const userEditedRef = useRef(false)
 
   // Sync server changes when not editing
   useEffect(() => { setTitle(note.title) }, [note.title])
@@ -82,25 +86,34 @@ export function StickyNote({ note }: StickyNoteProps) {
     }, 800)
   }, [note.id, updateNote])
 
-  // BlockNote onChange — debounce-save (skip during initial block load)
+  // BlockNote onChange — debounce-save (skip during initial block load & round-trip artifacts)
   const handleEditorChange = useCallback(async () => {
     if (loadingBlocksRef.current) return
     const md = (await editor.blocksToMarkdownLossy(editor.document)).trim()
-    setContent(md)
+    // Ignore if identical to baseline (round-trip artifact, not a real user edit)
+    if (md === baselineMdRef.current && !userEditedRef.current) return
+    userEditedRef.current = true
     contentRef.current = md
     scheduleSave(md)
   }, [editor, scheduleSave])
 
   // Enter edit mode: load markdown into BlockNote BEFORE showing editor
   const enterEditMode = useCallback(async () => {
+    const md = contentRef.current?.trim() || ''
+    enterContentRef.current = md
+    userEditedRef.current = false
     try {
-      const md = contentRef.current?.trim() || ''
       const blocks = md
         ? await editor.tryParseMarkdownToBlocks(md)
         : [{ type: 'paragraph' as const }]
       loadingBlocksRef.current = true
       editor.replaceBlocks(editor.document, blocks)
-      loadingBlocksRef.current = false
+      // Capture baseline after round-trip so we can detect real vs artifact changes
+      // Delay reset so async onChange from replaceBlocks is ignored
+      setTimeout(async () => {
+        baselineMdRef.current = (await editor.blocksToMarkdownLossy(editor.document)).trim()
+        loadingBlocksRef.current = false
+      }, 150)
     } catch {
       loadingBlocksRef.current = false
     }
@@ -108,14 +121,22 @@ export function StickyNote({ note }: StickyNoteProps) {
     setTimeout(() => editor.focus(), 50)
   }, [editor])
 
-  // Exit edit mode: flush any pending save
-  const exitEditMode = useCallback(() => {
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current)
-      updateNote.mutate({ id: note.id, data: { title: titleRef.current, content: contentRef.current, color: colorRef.current } })
+  // Exit edit mode: only save if user actually typed; otherwise restore original to avoid round-trip artifacts
+  const exitEditMode = useCallback(async () => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    if (userEditedRef.current) {
+      // Get final state from editor
+      const md = (await editor.blocksToMarkdownLossy(editor.document)).trim()
+      setContent(md)
+      contentRef.current = md
+      updateNote.mutate({ id: note.id, data: { title: titleRef.current, content: md, color: colorRef.current } })
+    } else {
+      // No user changes — restore original content to prevent markdown round-trip adding spaces/newlines
+      setContent(enterContentRef.current)
+      contentRef.current = enterContentRef.current
     }
     setIsEditing(false)
-  }, [note.id, updateNote])
+  }, [editor, note.id, updateNote])
 
   // ---- Resize handle ----
   const noteWidthRef  = useRef(noteWidth);  noteWidthRef.current  = noteWidth
@@ -300,7 +321,7 @@ export function StickyNote({ note }: StickyNoteProps) {
               type="button"
               className={`note-btn ${isEditing ? 'note-btn--active' : ''}`}
               title={isEditing ? 'Concluir edição' : 'Editar nota'}
-              onClick={() => isEditing ? exitEditMode() : void enterEditMode()}
+              onClick={() => isEditing ? void exitEditMode() : void enterEditMode()}
             >{isEditing ? '✓' : '✏️'}</button>
           )}
 
@@ -362,7 +383,7 @@ export function StickyNote({ note }: StickyNoteProps) {
               </div>
               {savedContentRef.current && (
                 <div className="note-live-preview note-live-preview--dimmed" aria-hidden>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{savedContentRef.current}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{savedContentRef.current}</ReactMarkdown>
                 </div>
               )}
               <textarea
@@ -381,8 +402,10 @@ export function StickyNote({ note }: StickyNoteProps) {
             <div
               className="note-blocknote-wrap"
               onBlur={e => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                  exitEditMode()
+                // Only exit if focus left the entire sticky note (not just the editor wrap)
+                const stickyNote = e.currentTarget.closest('.sticky-note')
+                if (stickyNote && !stickyNote.contains(e.relatedTarget as Node)) {
+                  void exitEditMode()
                 }
               }}
             >
@@ -406,7 +429,7 @@ export function StickyNote({ note }: StickyNoteProps) {
             /* Preview mode — text is selectable; use ✏️ button in header to edit */
             <div className="note-preview">
               {content
-                ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                ? <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{content}</ReactMarkdown>
                 : <span className="note-preview-placeholder">Clique para editar... (/ para comandos, /ia para IA)</span>
               }
             </div>

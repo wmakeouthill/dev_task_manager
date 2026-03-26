@@ -170,3 +170,42 @@
   font-size: 0.875rem;
   box-sizing: border-box;
 }
+
+/* ---- BlockNote code block language selector & header styling ---- */
+.blocknote-desc-editor-inner [data-content-type="codeBlock"] {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-default, rgba(255, 255, 255, 0.06));
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.blocknote-desc-editor-inner [data-content-type="codeBlock"] select,
+.blocknote-desc-editor-inner [data-content-type="codeBlock"] [class*="languageSelect"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  padding: 2px 6px !important;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.blocknote-desc-editor-inner [data-content-type="codeBlock"] select:hover,
+.blocknote-desc-editor-inner [data-content-type="codeBlock"] [class*="languageSelect"]:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.blocknote-desc-editor-inner [data-content-type="codeBlock"] select:focus,
+.blocknote-desc-editor-inner [data-content-type="codeBlock"] [class*="languageSelect"]:focus {
+  border-color: var(--accent, rgba(99, 102, 241, 0.5)) !important;
+}
+
+.blocknote-desc-editor-inner [data-content-type="codeBlock"] select option {
+  background: var(--bg-overlay, #252525);
+  color: var(--text-primary, #e3e3e3);
+}
